@@ -1,0 +1,36 @@
+[project]
+# Имя проекта — только латиница и дефисы
+name = "rag-legal-v2"
+
+# Версия проекта — начинаем с 0.1.0
+version = "0.1.0"
+
+# Минимальная версия Python
+requires-python = ">=3.11"
+
+# Список зависимостей — библиотеки, которые нужны проекту
+dependencies = [
+    # Клиент OpenAI — для вызова GPT и обработки tool_calls
+    "openai>=1.0.0",
+
+    # Pydantic-settings — читает переменные из .env файла
+    "pydantic-settings>=2.0.0",
+
+    # Jinja2 — шаблонизатор для системного промпта
+    "jinja2>=3.1.0",
+
+    # Jsonschema — валидация JSON Schema инструмента
+    "jsonschema>=4.0.0",
+    "httpx[socks]>=0.27.0",
+]
+
+[dependency-groups]
+# Зависимости только для тестов — не попадают в прод
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[tool.pytest.ini_options]
+# Говорим pytest: все async-тесты запускать автоматически
+asyncio_mode = "auto"
