@@ -1,5 +1,6 @@
 import json
 import logging
+import httpx2
 
 from openai import OpenAI
 
@@ -31,6 +32,7 @@ def run_tool_call(user_input: str) -> str:
     client = OpenAI(
         api_key=settings.openai_api_key.get_secret_value(),
         timeout=settings.request_timeout,
+        http_client=httpx2.Client(trust_env=False),
     )
 
     # Загружаем системный промпт из app/prompts/system_v1.j2
