@@ -17,6 +17,7 @@ class Settings(BaseSettings):
         env_nested_delimiter="__",
         extra="ignore",
         
+        
     )
 
     llm: LLMSettings
@@ -24,7 +25,7 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = 3600
     cors_origins: list[str] = ["http://localhost:3000"]
     log_level: str = "INFO"
-    
+    rate_limit_per_min: int = 30
 
 
 @lru_cache

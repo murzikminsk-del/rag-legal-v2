@@ -1,5 +1,54 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 3.7 — Тестирование и оценка качества
+
+Unit-тесты с моками, golden dataset на 22 кейса, LLM-as-judge (G-Eval), пороги качества.
+
+**Что реализовано:**
+- `tests/unit/test_llm_service.py` — 10 unit-тестов с `pytest-mock`: cache hit/miss, маппинг исключений, инварианты ключа кеша, парсинг `ChatResponse.from_openai`, валидация Pydantic, `calculate_cost`, PII в `repr(Message)`
+- `app/schemas/chat.py` — добавлены: `Field(min_length=1)` у `messages`, `Message.__repr__` с PII-маскировкой, функция `calculate_cost(model, usage) -> float`
+- `eval/golden_dataset.json` — 22 кейса, 3 категории (factual / procedure / contract), 5 примеров `difficulty: hard`, поля `must_not_contain`
+- `eval/run_evaluation.py` — CLI: вызывает сервис с `temperature=0`, судья с `response_format=json_object` и промптом reason-then-score (сначала `reasoning`, потом `scores`)
+- `eval/runs/<date>.json` — артефакт прогона: per-item оценки + агрегаты
+- `eval/check_thresholds.py` + `eval/thresholds.yaml` — проверка порогов: `correctness_avg ≥ 4.0`, `min_correctness ≥ 2.0`, `sys.exit(1)` при нарушении
+
+**Результаты прогона (2026-08-18, judge: gpt-4.1):**
+- `correctness_avg = 4.27` ✅
+- `relevance_avg = 4.91` ✅
+- `completeness_avg = 4.14` ✅
+- `min_correctness = 2` ✅
+
+**Запуск unit-тестов (без API-ключей и сети):**
+```bash
+pytest tests/unit/ -v
+```
+
+**Запуск evaluation (сервис должен быть запущен):**
+
+> ⚠️ **Прокси:** OpenAI API вызывается из скрипта напрямую, нужен Clash/VPN.
+> Перед запуском установи переменные окружения:
+> ```powershell
+> $env:HTTPS_PROXY = "socks5://127.0.0.1:10808"
+> $env:HTTP_PROXY  = "socks5://127.0.0.1:10808"
+> ```
+
+```bash
+docker compose up -d
+python eval/run_evaluation.py --golden eval/golden_dataset.json --judge gpt-4.1 --out eval/runs/2026-08-18.json
+```
+
+**Проверка порогов:**
+```bash
+python eval/check_thresholds.py
+```
+
+**Проверить агрегаты через jq:**
+```bash
+jq '.aggregates.correctness_avg' eval/runs/2026-08-18.json
+```
+
+---
+
 ## Блок 3.6 — Observability: трейсинг, логирование, PII-маскировка
 
 Arize Phoenix для AI-трейсов, structlog JSON-логи с `request_id`, маскировка персональных данных.

@@ -1,0 +1,279 @@
+{
+  "run_id": "54056d77-5601-4f09-a108-0b581bb5d70e",
+  "timestamp": "2026-08-18T09:55:15.655740+00:00",
+  "model_under_test": "gpt-4.1-mini",
+  "judge_model": "gpt-4.1",
+  "golden_version": 1,
+  "items": [
+    {
+      "id": "faq_001",
+      "question": "Что такое исковая давность?",
+      "answer": "Исковая давность — это установленный законом срок, в течение которого лицо имеет право обратиться в суд с требованием защиты своих нарушенных или оспариваемых прав. Если этот срок пропущен, то суд, как правило, откажет в удовлетворении иска, за исключением некоторых случаев, предусмотренных законом.\n\nИными словами, исковая давность ограничивает время, в течение которого можно предъявить иск к другой стороне. Это необходимо для обеспечения правовой определённости и стабильности, а также для защиты ответчика от необоснованных претензий спустя длительное время.\n\nВ российском гражданском праве, например, общий срок исковой давности составляет 3 года, если иное не установлено законом или договором. Срок начинает течь с момента, когда лицо узнало или должно было узнать о нарушении своего права.\n\nТаким образом, исковая давность — это важный институт, регулирующий сроки защиты прав в судебном порядке.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 5
+      },
+      "reasoning": "The Actual Answer is highly relevant, accurately defines the concept of 'исковая давность', and provides additional context about its purpose and application. It correctly states the general 3-year period in Russian civil law and mentions the starting point for the limitation period. The answer is more detailed than the Expected Answer, covering all key aspects and adding useful clarifications.",
+      "explanation": "The answer is fully accurate, relevant, and comprehensive, exceeding the expected standard."
+    },
+    {
+      "id": "faq_002",
+      "question": "Каков минимальный уставный капитал ООО?",
+      "answer": "Минимальный уставный капитал общества с ограниченной ответственностью (ООО) в России составляет **10 000 рублей**. Это установлено Федеральным законом № 14-ФЗ «Об обществах с ограниченной ответственностью». \n\nПри этом размер уставного капитала может быть больше, если это предусмотрено учредительными документами общества. Уставный капитал формируется из вкладов участников и служит гарантией интересов кредиторов общества.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 5
+      },
+      "reasoning": "The Actual Answer directly addresses the question by stating the minimum charter capital for an LLC in Russia as 10,000 rubles, referencing the correct law. It also provides additional relevant context about the possibility of a higher capital and the purpose of the capital, which, while not strictly required, adds useful information. The answer is accurate and complete, covering all important aspects.",
+      "explanation": "The answer is fully correct, relevant, and provides helpful additional context."
+    },
+    {
+      "id": "faq_003",
+      "question": "Что такое солидарная ответственность должников?",
+      "answer": "Солидарная ответственность должников — это форма ответственности, при которой несколько лиц (должников) обязаны выполнить одно и то же обязательство перед кредитором, и кредитор вправе требовать исполнения обязательства в полном объёме от любого из них. Это означает, что каждый из должников отвечает за исполнение всего обязательства, а не только своей части.\n\nОсновные особенности солидарной ответственности:\n\n1. **Общее обязательство** — несколько должников связаны одним обязательством перед кредитором.\n2. **Право кредитора** — кредитор может требовать полного исполнения обязательства от любого из должников по своему выбору.\n3. **Внутренние отношения между должниками** — после исполнения обязательства одним из должников он имеет право требовать от других должников возмещения их долей (регрессное требование).\n4. **Применение** — солидарная ответственность часто встречается в договорных отношениях, например, при совместном заключении договора займа, поручительства, совместной деятельности и т.д.\n\nТаким образом, солидарная ответственность обеспечивает кредитору большую гарантию получения исполнения обязательства, поскольку он может обратиться за полным исполнением к любому из должников.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 5
+      },
+      "reasoning": "The actual answer is highly relevant, accurately explaining the concept of joint and several (солидарная) liability of debtors. It covers the creditor's rights, the obligation of each debtor, and the right of recourse (регресс) among debtors, matching the expected answer. Additionally, it provides practical examples and clarifies the main features, making the answer comprehensive and clear.",
+      "explanation": "The answer is fully relevant, accurate, and comprehensive, matching and expanding on the expected answer."
+    },
+    {
+      "id": "faq_004",
+      "question": "Каков срок исковой давности по трудовым спорам?",
+      "answer": "Срок исковой давности по трудовым спорам в России составляет **три года**. Это означает, что работник или работодатель имеют право обратиться в суд с иском о защите трудовых прав в течение трёх лет с момента, когда они узнали или должны были узнать о нарушении своих прав.\n\nОднако есть некоторые особенности:\n\n- Если речь идет о восстановлении на работе, компенсации за незаконное увольнение и других подобных спорах, срок исковой давности также составляет три года.\n- В некоторых случаях, например, при взыскании задолженности по заработной плате, срок исковой давности может исчисляться с момента, когда заработная плата должна была быть выплачена.\n\nВажно учитывать, что срок исковой давности может быть прерван или приостановлен в определённых случаях, например, если стороны ведут переговоры или если истец не мог обратиться в суд по уважительным причинам.\n\nДля точного определения срока и его начала рекомендуется обращаться к статье 392 Трудового кодекса РФ и статье 196 Гражданского кодекса РФ.",
+      "scores": {
+        "relevance": 4,
+        "correctness": 2,
+        "completeness": 2
+      },
+      "reasoning": "The Actual Answer is relevant to the question but contains a significant factual inaccuracy: it incorrectly states that the general limitation period for labor disputes is three years, whereas the correct periods are 3 months for most disputes, 1 month for dismissal disputes, and 1 year for wage claims, as specified in the Expected Answer and Article 392 of the Labor Code. The answer also lacks specificity regarding the different types of labor disputes and their respective limitation periods, leading to incompleteness. While it mentions the possibility of interruption or suspension of the limitation period, it does not provide the precise legal timeframes required.",
+      "explanation": "The answer is relevant but factually incorrect and incomplete regarding the specific limitation periods for different types of labor disputes."
+    },
+    {
+      "id": "faq_005",
+      "question": "Что такое форс-мажор в договоре?",
+      "answer": "Форс-мажор в договоре — это обстоятельства непреодолимой силы, которые стороны не могли предвидеть или предотвратить, и которые делают невозможным исполнение обязательств по договору. К таким обстоятельствам обычно относят стихийные бедствия (землетрясения, наводнения, ураганы), войны, забастовки, эпидемии, действия государственных органов и другие события, находящиеся вне контроля сторон.\n\nВключение форс-мажорной оговорки в договор позволяет сторонам освободиться от ответственности за неисполнение или ненадлежащее исполнение обязательств, если оно произошло именно по причине таких непредвиденных и непреодолимых обстоятельств. При этом важно, чтобы сторона, ссылающаяся на форс-мажор, своевременно уведомила другую сторону о наступлении таких обстоятельств.\n\nТаким образом, форс-мажор — это юридический механизм защиты от последствий событий, которые невозможно предотвратить или контролировать, и которые временно или полностью препятствуют исполнению договора.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 4
+      },
+      "reasoning": "The Actual Answer is relevant and provides a detailed explanation of what constitutes force majeure in a contract, including examples and the legal consequences. It accurately describes the concept and the typical effects on contractual obligations. However, it does not explicitly reference Article 401 of the Russian Civil Code or clarify that force majeure does not terminate the obligation itself, only the liability for non-performance. These omissions make the answer slightly less complete than the Expected Answer.",
+      "explanation": "The answer is accurate and relevant but lacks a direct legal reference and a note that obligations persist despite force majeure."
+    },
+    {
+      "id": "faq_006",
+      "question": "При каких условиях директора ООО можно привлечь к субсидиарной ответственности при банкротстве?",
+      "answer": "Директора ООО могут быть привлечены к субсидиарной ответственности при банкротстве общества в случаях, когда его действия (или бездействие) привели к ухудшению финансового состояния компании, что повлекло невозможность удовлетворения требований кредиторов. В российском законодательстве (в частности, в Федеральном законе от 26.10.2002 № 127-ФЗ «О несостоятельности (банкротстве)») установлены конкретные основания для такой ответственности.\n\n**Основные условия привлечения директора ООО к субсидиарной ответственности при банкротстве:**\n\n1. **Наличие банкротства общества**  \n   Компания должна быть признана банкротом в установленном порядке.\n\n2. **Виновные действия (бездействие) директора**  \n   Директор должен был допустить действия, которые привели к ухудшению финансового состояния общества. К таким действиям относятся:  \n   - умышленное доведение общества до банкротства;  \n   - неправомерное использование имущества общества;  \n   - нарушение обязанностей по ведению бухгалтерского учета и отчетности;  \n   - несвоевременная подача заявления о банкротстве;  \n   - совершение сделок, которые явно ухудшают финансовое положение общества;  \n   - иные действия, нарушающие законодательство и наносящие ущерб кредиторам.\n\n3. **Причинно-следственная связь**  \n   Должна быть доказана прямая связь между действиями директора и наступлением банкротства, а также невозможностью удовлетворения требований кредиторов.\n\n4. **Наличие убытков для кредиторов**  \n   В результате действий директора кредиторы понесли убытки, которые не могут быть покрыты за счет имущества общества.\n\n5. **Решение суда**  \n   Привлечение к субсидиарной ответственности возможно только по решению арбитражного суда в рамках процедуры банкротства.\n\n---\n\n**Итог:**  \nДиректора ООО можно привлечь к субсидиарной ответственности при банкротстве, если будет доказано, что он своими действиями или бездействием умышленно или по неосторожности довел общество до несостоятельности, что привело к ущербу кредиторов, и это установит арбитражный суд.\n\n---\n\nЕсли нужно, могу привести ссылки на конкретные статьи закона и судебную практику.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 5
+      },
+      "reasoning": "The Actual Answer is highly relevant and provides a detailed, accurate explanation of the conditions under which a director of an LLC can be held subsidiarily liable in bankruptcy. It covers the key legal grounds, including the necessity of proven wrongful actions or omissions, causation, and court decision, and lists specific examples such as untimely bankruptcy filing and harmful transactions. While it does not cite specific articles (like 61.11 and 61.12), it accurately reflects their substance and covers all major points from the Expected Answer.",
+      "explanation": "The answer is fully relevant, accurate, and comprehensive, matching the expected legal criteria."
+    },
+    {
+      "id": "faq_007",
+      "question": "Какие сделки признаются контролируемыми по НК РФ?",
+      "answer": "В соответствии с Налоговым кодексом Российской Федерации (НК РФ), контролируемыми признаются сделки, которые подлежат обязательному контролю со стороны налоговых органов в целях предотвращения занижения налоговой базы и вывода прибыли за пределы налоговой юрисдикции РФ.\n\n**Основные положения о контролируемых сделках содержатся в главе 14.3 НК РФ.**\n\n### Какие сделки признаются контролируемыми?\n\n1. **Сделки между взаимозависимыми лицами**  \n   Контролируемыми признаются сделки, совершённые между взаимозависимыми лицами. Взаимозависимые лица — это, например, организации, входящие в одну группу, аффилированные лица, лица, имеющие существенное влияние друг на друга (например, доля участия более 20%, участие в управлении и т.п.).\n\n2. **Сделки с иностранными организациями и лицами**  \n   Сделки с иностранными организациями и лицами, если они являются взаимозависимыми с российской организацией.\n\n3. **Сделки, в которых участвуют российские организации и иностранные контролируемые иностранные компании (КИК)**.\n\n4. **Сделки, по которым сумма превышает установленные пороговые значения**  \n   Для признания сделки контролируемой сумма сделки должна превышать определённые пороговые значения, установленные НК РФ (например, 60 млн рублей для сделок с взаимозависимыми лицами, 15 млн рублей для сделок с иностранными организациями и т.д.).\n\n5. **Сделки, которые могут повлиять на налоговую базу**  \n   Сделки, которые могут привести к занижению налоговой базы, например, сделки по продаже товаров, работ, услуг по ценам, отличающимся от рыночных.\n\n### Примеры контролируемых сделок:\n\n- Продажа товаров, работ, услуг между взаимозависимыми лицами по цене, отличающейся от рыночной.\n- Передача имущества между взаимозависимыми лицами.\n- Сделки с иностранными компаниями, если они взаимозависимы с российской организацией.\n- Сделки с КИК, если они влияют на распределение прибыли.\n\n### Обязанности налогоплательщиков по контролируемым сделкам:\n\n- Представлять в налоговые органы уведомления о контролируемых сделках.\n- Вести учет и документальное подтверждение рыночности условий сделок.\n- При необходимости корректировать налоговую базу.\n\n---\n\n**Итог:**  \nКонтролируемыми по НК РФ признаются сделки между взаимозависимыми лицами, сделки с иностранными организациями и лицами, а также сделки с контролируемыми иностранными компаниями, если сумма сделки превышает установленные пороговые значения и сделка может повлиять на налоговую базу.\n\nЕсли нужна более конкретная информация или ссылки на статьи НК РФ, могу предоставить.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 4,
+        "completeness": 5
+      },
+      "reasoning": "The actual answer is highly relevant and provides a detailed explanation of what constitutes a controlled transaction under the Russian Tax Code, referencing the appropriate legal framework and criteria. It covers the main points from the expected answer, such as transactions between related parties, thresholds for domestic and international transactions, and the involvement of controlled foreign companies. However, it introduces some minor inaccuracies regarding threshold amounts (e.g., 60 million rubles instead of the current 1 billion rubles for domestic transactions) and adds extra details not strictly required by the question.",
+      "explanation": "Comprehensive and relevant answer, but contains minor inaccuracies in threshold amounts."
+    },
+    {
+      "id": "faq_008",
+      "question": "В какой суд подавать исковое заявление по общему правилу?",
+      "answer": "По общему правилу исковое заявление подается в суд по месту нахождения ответчика. Это закреплено в статье 28 Гражданского процессуального кодекса Российской Федерации (ГПК РФ). Если иное не установлено законом или соглашением сторон, то именно суд по месту нахождения ответчика является подсудным для рассмотрения дела.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 3
+      },
+      "reasoning": "The actual answer is relevant and factually accurate, correctly stating the general rule of territorial jurisdiction and referencing Article 28 of the Civil Procedure Code. However, it lacks completeness because it does not mention the Arbitration Procedure Code (АПК РФ) or common exceptions such as cases involving real estate or consumer protection, which are present in the expected answer.",
+      "explanation": "The answer is accurate and relevant but omits key exceptions and references found in the expected answer."
+    },
+    {
+      "id": "faq_009",
+      "question": "Каков срок рассмотрения гражданского дела в районном суде?",
+      "answer": "Срок рассмотрения гражданского дела в районном суде в России не установлен конкретным фиксированным периодом, однако процесс должен проходить в разумные сроки. Согласно статье 6 Гражданского процессуального кодекса РФ (ГПК РФ), суд обязан рассматривать дело в разумный срок, обеспечивая при этом права и законные интересы участников процесса.\n\nПрактически, в соответствии с частью 1 статьи 154 ГПК РФ, подготовка дела к судебному разбирательству не должна превышать одного месяца со дня поступления дела в суд, а само судебное разбирательство должно быть назначено в ближайшее возможное время.\n\nВ целом, сроки рассмотрения гражданских дел зависят от сложности дела, загруженности суда и других обстоятельств, но обычно рассмотрение дела в первой инстанции занимает от нескольких месяцев до полугода.\n\nЕсли дело рассматривается слишком долго, участники процесса имеют право заявить ходатайство о рассмотрении дела в разумный срок или обратиться с жалобой на бездействие суда в вышестоящую инстанцию.\n\n---\n\nЕсли нужна более конкретная информация по вашему делу или региону, уточните, пожалуйста.",
+      "scores": {
+        "relevance": 4,
+        "correctness": 3,
+        "completeness": 2
+      },
+      "reasoning": "The actual answer provides general information about the reasonable time requirement and references Article 6 of the Civil Procedure Code, but it fails to clearly state the specific 2-month period for district courts as required by Article 154 GPK RF. It also incorrectly emphasizes the preparation period and omits the explicit statutory deadline. While the answer is relevant and mostly accurate, it lacks completeness because it does not directly provide the precise legal timeframe expected in the answer.",
+      "explanation": "The answer is generally relevant but omits the explicit 2-month statutory deadline for district courts, making it incomplete."
+    },
+    {
+      "id": "faq_010",
+      "question": "Как правильно составить претензию по договору поставки?",
+      "answer": "Претензия по договору поставки — это официальное письменное обращение к поставщику с требованием устранить выявленные нарушения условий договора (например, поставка некачественного товара, несвоевременная поставка, неполный комплект и т.д.).\n\nНиже приведена структура и рекомендации по составлению претензии:\n\n---\n\n### Структура претензии по договору поставки\n\n1. **Шапка документа:**\n   - Наименование организации или ФИО отправителя (покупателя).\n   - Адрес, контактные данные.\n   - Дата составления претензии.\n   - Наименование организации-поставщика, его адрес и контактные данные.\n   - Исходящий номер претензии (если используется).\n\n2. **Заголовок:**\n   - Например: «Претензия по договору поставки № ___ от ___»\n\n3. **Вводная часть:**\n   - Указать реквизиты договора поставки (номер, дата).\n   - Кратко описать суть сделки (что, когда и в каком количестве было заказано и поставлено).\n\n4. **Описание проблемы:**\n   - Конкретно указать выявленные нарушения (например, поставлен товар ненадлежащего качества, несоответствие спецификациям, просрочка поставки, неполный комплект и т.п.).\n   - При необходимости сослаться на результаты экспертизы, акты приемки, фотографии, иные доказательства.\n\n5. **Требования:**\n   - Четко сформулировать требования (замена товара, устранение недостатков, возврат денег, штрафные санкции и т.д.).\n   - Указать срок, в течение которого поставщик должен выполнить требования (обычно 10-30 дней).\n\n6. **Юридические основания:**\n   - Ссылки на соответствующие статьи Гражданского кодекса РФ (например, ст. 475, 476, 523, 524 и др.).\n   - Пункты договора, которые нарушены.\n\n7. **Заключение:**\n   - Просьба подтвердить получение претензии.\n   - Указать, что в случае невыполнения требований претензии покупатель оставляет за собой право обратиться в суд.\n\n8. **Подпись и печать:**\n   - Подпись уполномоченного лица.\n   - Печать организации (если есть).\n\n---\n\n### Пример претензии по договору поставки\n\n```\nООО «Покупатель»\nАдрес: 123456, г. Москва, ул. Примерная, д. 1\nТел.: +7 (495) 123-45-67\nEmail: info@pokupatel.ru\n\nИсх. № 15 от 01.06.2024\n\nООО «Поставщик»\nАдрес: 654321, г. Санкт-Петербург, ул. Образцовая, д. 10\n\nПретензия по договору поставки № 10 от 15.05.2024\n\nВ соответствии с договором поставки № 10 от 15.05.2024 ООО «Поставщик» обязалось поставить 100 единиц товара «А». Товар был поставлен 30.05.2024.\n\nПри приемке товара выявлены следующие недостатки: 20 единиц товара имеют механические повреждения, что подтверждается актом приемки от 31.05.2024.\n\nНа основании ст. 475, 476 Гражданского кодекса РФ и условий договора требуем:\n\n- В течение 10 (десяти) календарных дней с момента получения настоящей претензии заменить поврежденный товар на товар надлежащего качества;\n- В случае невыполнения требований претензии будем вынуждены обратиться в суд для защиты своих прав.\n\nПросим подтвердить получение претензии.\n\nРуководитель ООО «Покупатель»  \n__________________ /Иванов И.И./  \nМ.П.\n```\n\n---\n\nЕсли нужна помощь с конкретным текстом претензии — можете предоставить детали, я помогу составить.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 5
+      },
+      "reasoning": "The Actual Answer is highly relevant, providing a detailed structure and example of a claim under a supply contract. It covers all key elements mentioned in the Expected Answer, such as party details, description of the breach, references to contract clauses and law, specific demands, deadlines, and delivery method. Additionally, it offers a sample letter, which enhances clarity and practical value. The answer is accurate and even more comprehensive than the Expected Answer.",
+      "explanation": "The answer is fully relevant, accurate, and comprehensive, exceeding the expected requirements."
+    },
+    {
+      "id": "faq_011",
+      "question": "Что делать, если контрагент не платит по договору?",
+      "answer": "Если контрагент не платит по договору, рекомендуется предпринять следующие шаги:\n\n1. **Проверить договор**  \n   Внимательно изучите условия договора: сроки оплаты, порядок расчетов, штрафные санкции за просрочку и порядок разрешения споров.\n\n2. **Связаться с контрагентом**  \n   Попытайтесь выяснить причины задержки платежа — возможно, это техническая ошибка или временные финансовые трудности. Иногда достаточно переговоров для урегулирования ситуации.\n\n3. **Направить письменное требование об оплате**  \n   Отправьте официальное письмо (претензию) с требованием оплатить задолженность в установленный срок. В письме укажите сумму долга, реквизиты для оплаты и последствия неисполнения обязательств.\n\n4. **Использовать досудебное урегулирование спора**  \n   Если переговоры и претензия не помогли, можно предложить медиацию или иные способы досудебного урегулирования.\n\n5. **Обратиться в суд**  \n   Если контрагент продолжает не платить, подайте иск в суд о взыскании задолженности. Для этого подготовьте все документы: договор, акты выполненных работ/оказанных услуг, счета, переписку, претензии.\n\n6. **Использовать меры обеспечения и взыскания**  \n   После получения судебного решения можно обратиться к судебным приставам для принудительного взыскания долга.\n\n7. **Рассмотреть возможность расторжения договора**  \n   Если долг существенный и контрагент не выполняет обязательства, возможно, стоит расторгнуть договор и искать другого партнера.\n\n---\n\n**Важно:**  \n- Сохраняйте всю переписку и документы, связанные с договором и оплатой.  \n- При необходимости проконсультируйтесь с юристом для оценки ситуации и выбора оптимальной стратегии.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 4,
+        "completeness": 4
+      },
+      "reasoning": "The Actual Answer is relevant and provides a detailed, step-by-step approach to the situation when a counterparty does not pay under a contract. It covers checking the contract, negotiation, sending a written demand, pre-trial settlement, court action, enforcement, and possible contract termination. However, it lacks specific references to the mandatory pre-trial claim requirement for most commercial disputes (as per AПК РФ), and does not mention the direct submission of the writ of execution to the bank, which are present in the Expected Answer. Overall, the answer is practical and accurate but misses some legal specifics.",
+      "explanation": "Comprehensive and practical, but lacks some legal specifics from the Expected Answer."
+    },
+    {
+      "id": "faq_012",
+      "question": "Как зарегистрировать товарный знак в России?",
+      "answer": "Регистрация товарного знака в России — это процесс официального оформления прав на обозначение, которое используется для индивидуализации товаров или услуг. Вот основные шаги для регистрации товарного знака в России:\n\n1. **Проведение предварительного поиска**  \n   Рекомендуется проверить, не зарегистрирован ли уже похожий или идентичный товарный знак. Это можно сделать через базу данных Роспатента или с помощью специализированных сервисов.\n\n2. **Подготовка заявки**  \n   В заявке указываются:  \n   - Изображение или описание товарного знака (словесный, изобразительный, комбинированный и т.д.)  \n   - Сведения о заявителе (физическое или юридическое лицо)  \n   - Перечень товаров и/или услуг, для которых регистрируется знак (по МКТУ — Международной классификации товаров и услуг)  \n   - Контактные данные\n\n3. **Подача заявки в Роспатент**  \n   Заявку можно подать:  \n   - Онлайн через официальный сайт Роспатента (https://rupto.ru)  \n   - Лично или по почте в Федеральную службу по интеллектуальной собственности (Роспатент)\n\n4. **Формальная экспертиза**  \n   Роспатент проверяет правильность оформления заявки и соответствие требованиям.\n\n5. **Экспертиза по существу**  \n   Проверяется уникальность знака, отсутствие сходства с уже зарегистрированными знаками, соответствие законодательству.\n\n6. **Публикация заявки**  \n   Если экспертиза успешна, заявка публикуется в официальном бюллетене. В течение 3 месяцев третьи лица могут подать возражения.\n\n7. **Регистрация и выдача свидетельства**  \n   Если возражений нет или они отклонены, Роспатент регистрирует товарный знак и выдает свидетельство о регистрации.\n\n8. **Срок действия и продление**  \n   Свидетельство действует 10 лет с даты подачи заявки. Продлить регистрацию можно неограниченное количество раз на 10 лет.\n\n---\n\n**Важно:**  \n- Регистрация товарного знака — платная процедура. Размер пошлин зависит от количества классов МКТУ и других факторов.  \n- Можно обратиться к патентным поверенным для помощи в подготовке и сопровождении заявки.\n\nЕсли нужна более подробная информация или помощь, могу подсказать ссылки на официальные ресурсы и образцы документов.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 5
+      },
+      "reasoning": "The Actual Answer is highly relevant, providing a detailed, step-by-step guide to registering a trademark in Russia. It covers all key stages mentioned in the Expected Answer, such as preliminary search, application submission, payment of fees, formal and substantive examination, and issuance of the certificate. Additionally, it includes extra helpful details like the publication stage, possible objections, and the role of patent attorneys. All information is accurate and the answer is more comprehensive than the Expected Answer.",
+      "explanation": "The answer is fully relevant, accurate, and even more complete than required."
+    },
+    {
+      "id": "faq_013",
+      "question": "Как инициировать процедуру банкротства юридического лица?",
+      "answer": "Инициирование процедуры банкротства юридического лица в России регулируется Федеральным законом от 26.10.2002 № 127-ФЗ «О несостоятельности (банкротстве)». Ниже приведены основные шаги для начала процедуры банкротства:\n\n1. **Определение признаков банкротства**  \n   Юридическое лицо может быть признано банкротом, если:  \n   - его задолженность превышает 300 000 рублей;  \n   - просрочка исполнения обязательств составляет более 3 месяцев;  \n   - отсутствует возможность удовлетворить требования кредиторов.\n\n2. **Принятие решения о банкротстве**  \n   Решение о начале процедуры банкротства принимает:  \n   - само должник (руководство компании);  \n   - кредитор, если должник не исполняет обязательства;  \n   - уполномоченный орган (например, налоговая служба).\n\n3. **Подготовка и подача заявления в арбитражный суд**  \n   Для начала процедуры необходимо подать заявление о признании должника банкротом в арбитражный суд по месту нахождения юридического лица. К заявлению прилагаются:  \n   - документы, подтверждающие задолженность и просрочку;  \n   - бухгалтерская отчетность;  \n   - иные документы, подтверждающие финансовое состояние.\n\n4. **Оплата государственной пошлины**  \n   При подаче заявления уплачивается государственная пошлина (размер зависит от стоимости требований кредиторов).\n\n5. **Рассмотрение заявления судом**  \n   Суд проверяет заявление и документы, принимает решение о возбуждении дела о банкротстве. Если заявление удовлетворено, назначается арбитражный управляющий.\n\n6. **Проведение процедуры банкротства**  \n   В зависимости от ситуации могут применяться различные процедуры: наблюдение, финансовое оздоровление, внешнее управление, конкурсное производство, мировое соглашение.\n\n---\n\n**Важно:**  \n- Инициировать процедуру банкротства может как само юридическое лицо, так и кредиторы.  \n- Несвоевременное обращение с заявлением о банкротстве при наличии признаков неплатежеспособности может повлечь ответственность руководства.  \n- Рекомендуется обратиться к квалифицированному юристу или арбитражному управляющему для сопровождения процедуры.\n\nЕсли нужна более подробная информация по конкретному этапу или помощь с документами — сообщите, я помогу!",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 4
+      },
+      "reasoning": "The actual answer is highly relevant and accurate, providing a step-by-step outline of the bankruptcy initiation process for legal entities in Russia. It covers the legal grounds, who can file, the court involved, required documents, and subsequent procedures. While it does not cite specific articles of the law or mention the need to propose a candidate for arbitration manager (SRO) explicitly, it otherwise covers all key aspects and even adds practical advice.",
+      "explanation": "The answer is accurate and detailed, missing only minor legal specifics such as explicit reference to SRO and article numbers."
+    },
+    {
+      "id": "faq_014",
+      "question": "Как оспорить акт налоговой проверки?",
+      "answer": "Оспорить акт налоговой проверки можно в несколько этапов. Вот общий порядок действий:\n\n1. **Изучите акт проверки**  \n   Внимательно ознакомьтесь с содержанием акта, выявите спорные моменты, с которыми вы не согласны.\n\n2. **Подготовьте возражения**  \n   Составьте письменные возражения на акт проверки, укажите конкретные пункты, с которыми не согласны, и обоснуйте свою позицию ссылками на нормы законодательства и доказательствами.\n\n3. **Подача возражений в налоговый орган**  \n   Возражения подаются в тот же налоговый орган, который составил акт, в течение 10 рабочих дней с момента получения акта (срок может варьироваться в зависимости от региона и вида проверки). Это позволит попытаться урегулировать спор на досудебном уровне.\n\n4. **Обжалование в вышестоящий налоговый орган**  \n   Если налоговый орган первой инстанции не удовлетворил ваши возражения, можно подать жалобу в вышестоящий налоговый орган. Срок подачи жалобы обычно составляет 10 рабочих дней с момента получения решения по возражениям.\n\n5. **Обжалование в суде**  \n   Если и вышестоящий налоговый орган отказал в удовлетворении жалобы, вы можете обратиться в арбитражный суд. Для этого необходимо подать исковое заявление с приложением всех документов: акта проверки, возражений, решений налоговых органов и других доказательств.\n\n6. **Соблюдайте сроки**  \n   Очень важно соблюдать все установленные законом сроки подачи возражений, жалоб и исков, чтобы не потерять право на обжалование.\n\n---\n\n**Полезные советы:**\n\n- Консультируйтесь с налоговыми консультантами или юристами, специализирующимися на налоговом праве.  \n- Собирайте и сохраняйте все документы, подтверждающие вашу позицию.  \n- В некоторых случаях можно запросить проведение повторной проверки или экспертизы.\n\nЕсли нужна помощь с конкретным случаем, укажите детали — я помогу составить пример возражений или жалобы.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 4,
+        "completeness": 4
+      },
+      "reasoning": "The actual answer is relevant and provides a detailed step-by-step guide on how to challenge a tax audit act, including preparation, submission of objections, appeals to higher tax authorities, and court proceedings. However, it contains some inaccuracies regarding the deadlines (e.g., 10 working days instead of 1 month for objections) and omits explicit references to the mandatory pre-trial procedure and specific articles of the Tax Code. Despite these minor issues, the answer is generally complete and helpful.",
+      "explanation": "The answer is detailed and mostly accurate, but contains minor errors in deadlines and lacks legal references."
+    },
+    {
+      "id": "faq_015",
+      "question": "Что такое оферта и акцепт?",
+      "answer": "**Оферта** и **акцепт** — это ключевые понятия в договорном праве, связанные с процессом заключения договора.\n\n1. **Оферта** — это предложение одной стороны (оферента) другой стороне (адресату) заключить договор на определённых условиях. Оферта должна быть достаточно конкретной и выражать намерение оферента считать себя связанным договором с момента получения акцепта. Проще говоря, оферта — это официальное предложение заключить договор.\n\n2. **Акцепт** — это полное и безусловное принятие оферты адресатом. Акцепт означает согласие принять все условия, предложенные в оферте, и тем самым заключить договор. Акцепт должен быть выражен в форме, предусмотренной законом или условиями оферты (например, устно, письменно, в электронной форме).\n\n**Итог:** договор считается заключённым с момента получения оферентом акцепта, если оферта была действительной и акцепт соответствует её условиям.\n\n---\n\nЕсли нужно, могу привести примеры или объяснить особенности оферты и акцепта в разных правовых системах.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 4
+      },
+      "reasoning": "The Actual Answer is highly relevant and accurately explains the concepts of 'оферта' and 'акцепт' in the context of contract law. It provides clear definitions, describes the requirements for each, and correctly states that a contract is concluded upon receipt of the acceptance by the offeror. While it does not cite the specific articles of the Civil Code (as in the Expected Answer), it covers all essential aspects and even offers to elaborate further if needed.",
+      "explanation": "The answer is accurate, relevant, and nearly complete, lacking only direct legal citations."
+    },
+    {
+      "id": "faq_016",
+      "question": "Какие условия являются обязательными в договоре купли-продажи?",
+      "answer": "Обязательными условиями договора купли-продажи, согласно гражданскому законодательству Российской Федерации (статья 454 ГК РФ), являются:\n\n1. **Предмет договора** — конкретное имущество (товар), которое передается продавцом и принимается покупателем.\n2. **Цена** — денежная сумма, которую покупатель обязуется уплатить продавцу за товар.\n\nБез указания этих условий договор купли-продажи считается незаключённым.\n\nКроме того, в договоре могут быть указаны и другие условия, например, сроки передачи товара, порядок оплаты, ответственность сторон и т.д., но они не являются обязательными для признания договора действительным.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 3,
+        "completeness": 3
+      },
+      "reasoning": "The Actual Answer is relevant and generally accurate, as it addresses the essential terms of a contract of sale under Russian law. However, it incorrectly states that price is always a mandatory condition, whereas according to the Expected Answer and Article 455 of the Civil Code, only the subject (name and quantity of goods) is essential by default, and price is only essential for certain types of sales (e.g., real estate). The Actual Answer omits this nuance, making it incomplete and partially incorrect.",
+      "explanation": "The answer is relevant but overstates the necessity of price and misses important legal nuances."
+    },
+    {
+      "id": "faq_017",
+      "question": "В каких случаях договор признаётся незаключённым?",
+      "answer": "Договор признаётся незаключённым в случаях, когда стороны не достигли соглашения по всем существенным условиям договора, либо когда отсутствует волеизъявление одной из сторон, необходимое для заключения договора. \n\nОсновные ситуации, при которых договор признаётся незаключённым:\n\n1. **Отсутствие согласия по существенным условиям договора.**  \n   Если стороны не согласовали такие условия, которые закон или договор признаёт существенными (например, предмет договора, цена, сроки и т.п.), договор считается незаключённым.\n\n2. **Отсутствие волеизъявления одной из сторон.**  \n   Если одна из сторон не выразила согласия на заключение договора (например, отказалась подписывать договор, не направила акцепт оферты), договор не считается заключённым.\n\n3. **Нарушение формы договора, если она обязательна.**  \n   Если законом или соглашением сторон предусмотрена обязательная письменная форма договора, а она не соблюдена, договор может быть признан незаключённым.\n\n4. **Отказ от заключения договора после предварительных переговоров.**  \n   Если стороны вели переговоры, но не достигли соглашения, договор не считается заключённым.\n\nТаким образом, договор признаётся незаключённым, если отсутствует согласие по всем существенным условиям, либо отсутствует волеизъявление на заключение договора, либо не соблюдена обязательная форма договора.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 4,
+        "completeness": 4
+      },
+      "reasoning": "The Actual Answer is relevant and accurately describes the main grounds for a contract being considered unconcluded, including lack of agreement on essential terms and absence of necessary will expression. It expands on the Expected Answer by mentioning form requirements and negotiation outcomes, which, while not directly cited in the Expected Answer, are recognized in legal practice. However, it omits explicit reference to state registration, which is a key point in the Expected Answer. Overall, the answer is thorough but slightly incomplete due to this omission.",
+      "explanation": "The answer is accurate and detailed but misses the aspect of state registration required by law."
+    },
+    {
+      "id": "faq_018",
+      "question": "Что такое неустойка и какие её виды бывают?",
+      "answer": "**Неустойка** — это установленное договором или законом денежное взыскание, которое одна сторона обязана уплатить другой стороне в случае ненадлежащего исполнения или неисполнения обязательств. Проще говоря, неустойка служит средством обеспечения исполнения обязательств и компенсации убытков, вызванных нарушением договора.\n\n### Основные виды неустойки:\n\n1. **Пени**  \n   Это сумма, начисляемая за каждый день просрочки исполнения обязательства. Обычно выражается в процентах от суммы долга или другой денежной оценки. Пени стимулируют своевременное исполнение обязательств.\n\n2. **Штраф**  \n   Фиксированная денежная сумма, которую должник обязан уплатить при нарушении обязательства, независимо от продолжительности нарушения. Штраф может быть назначен за конкретное нарушение или событие.\n\n3. **Компенсационная неустойка**  \n   Предназначена для возмещения убытков, которые сторона понесла из-за нарушения обязательств другой стороной. Может быть как фиксированной суммой, так и определяться в процентах.\n\n### Дополнительные моменты:\n\n- Неустойка может быть предусмотрена как в гражданско-правовых договорах (например, в договорах поставки, подряда, аренды), так и в законодательстве (например, в части налоговых обязательств, жилищных отношений и т.д.).\n- Размер неустойки не должен быть явно чрезмерным, иначе суд может его уменьшить.\n- Неустойка не исключает возможности взыскания убытков, если они превышают сумму неустойки, за исключением случаев, когда законом или договором предусмотрено иное.\n\n---\n\nЕсли нужно, могу привести примеры из законодательства или договорной практики.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 4,
+        "completeness": 5
+      },
+      "reasoning": "The Actual Answer is relevant and provides a correct definition of неустойка, mentioning its legal basis and purpose. It accurately describes the main types—пени and штраф—and adds компенсационная неустойка, which, while not a standard classification in Russian law, is sometimes used in practice. The answer also covers additional important aspects, such as the possibility of judicial reduction and the relationship with damages, though it lacks direct references to specific articles of the Civil Code (e.g., ст. 330, 333 ГК РФ) as in the Expected Answer. Overall, the answer is thorough and accurate, with minor deviations in terminology.",
+      "explanation": "The answer is relevant, mostly accurate, and comprehensive, though it could be improved by citing specific legal articles."
+    },
+    {
+      "id": "faq_019",
+      "question": "Каков срок действия доверенности, если он не указан?",
+      "answer": "Если в доверенности не указан срок её действия, то согласно статье 188 Гражданского кодекса Российской Федерации, такая доверенность считается действительной в течение одного года со дня её выдачи.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 4,
+        "completeness": 3
+      },
+      "reasoning": "The actual answer is relevant and accurately states the general rule that a power of attorney without a specified term is valid for one year from the date of issuance. However, it references the wrong article (188 instead of 186) and omits the special rule for notarized powers of attorney for actions abroad, which is mentioned in the expected answer. Thus, the answer is not fully complete.",
+      "explanation": "The answer is accurate for the general case but lacks the exception for notarized powers of attorney for actions abroad."
+    },
+    {
+      "id": "faq_020",
+      "question": "Как расторгнуть договор в одностороннем порядке?",
+      "answer": "Расторгнуть договор в одностороннем порядке можно, но это зависит от условий самого договора и законодательства, регулирующего данный вид отношений. Вот основные моменты, которые нужно учитывать:\n\n1. **Проверьте условия договора**  \n   В договоре может быть прописан порядок и основания для одностороннего расторжения. Например, может быть указано, что одна из сторон имеет право расторгнуть договор, уведомив другую сторону за определённый срок.\n\n2. **Основания для одностороннего расторжения по закону**  \n   Если в договоре нет специальных условий, то расторжение возможно на основании норм гражданского законодательства. Например, в России это регулируется Гражданским кодексом РФ:\n   - Статья 450 ГК РФ — изменение и расторжение договора по соглашению сторон.\n   - Статья 452 ГК РФ — односторонний отказ от исполнения договора, если это предусмотрено договором или законом.\n   - Статья 450 и 451 ГК РФ — случаи существенного нарушения договора одной из сторон.\n\n3. **Уведомление другой стороны**  \n   Обычно для одностороннего расторжения необходимо направить письменное уведомление другой стороне. В уведомлении нужно указать:\n   - намерение расторгнуть договор;\n   - основания для расторжения;\n   - дату, с которой договор считается расторгнутым (если предусмотрено).\n\n4. **Сроки уведомления**  \n   В договоре или законе может быть установлен срок, за который нужно уведомить другую сторону (например, за 30 дней).\n\n5. **Особые случаи**  \n   - В договорах с потребителями (например, договоры на услуги, купли-продажи) могут быть специальные правила расторжения.\n   - В трудовом договоре одностороннее расторжение регулируется Трудовым кодексом РФ.\n\n6. **Если другая сторона не согласна**  \n   Если другая сторона не согласна с расторжением, возможно разрешение спора через суд.\n\n---\n\n**Пример уведомления о расторжении договора:**\n\n```\nООО \"Ромашка\"\nАдрес: ...\nИНН: ...\n\nОт: Иванова И.И.\nАдрес: ...\n\nУведомление  \nо расторжении договора №___ от \"__\"____20__ г.\n\nВ соответствии с пунктом ___ договора №___ от \"__\"____20__ г. уведомляю Вас о расторжении указанного договора в одностороннем порядке с \"__\"____20__ г.\n\nОснование: (указать причину, например, существенное нарушение условий договора).\n\nПрошу подтвердить получение данного уведомления.\n\nДата: \"__\"____20__ г.  \nПодпись: ___________\n```\n\n---\n\nЕсли вы хотите, могу помочь составить конкретный текст уведомления или проконсультировать по вашему случаю, если расскажете подробнее о договоре.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 5,
+        "completeness": 5
+      },
+      "reasoning": "The Actual Answer is highly relevant and provides a detailed, accurate, and practical explanation of unilateral contract termination under Russian law. It references the correct articles of the Civil Code, explains the need to check the contract and law, describes the notification process, and even provides a sample notification. While it could more explicitly mention that unilateral termination is only possible if allowed by law or contract (as per Article 450.1), this is implied in the explanation. The answer is thorough and covers all key aspects, including judicial procedures if there is a dispute.",
+      "explanation": "The answer is accurate, comprehensive, and directly addresses the question with practical guidance."
+    },
+    {
+      "id": "faq_021",
+      "question": "Как признать сделку недействительной как совершённую под влиянием обмана?",
+      "answer": "Для признания сделки недействительной на основании обмана необходимо доказать, что воля одной из сторон была сформирована под воздействием неправдивых сведений, которые имели существенное значение для заключения сделки. В российском гражданском праве это регулируется статьёй 178 Гражданского кодекса РФ.\n\n**Основные шаги для признания сделки недействительной по причине обмана:**\n\n1. **Определить наличие обмана**  \n   Обман — это введение в заблуждение одной стороны другой стороной путем предоставления ложных сведений или сокрытия истинных фактов, которые имели существенное значение для решения о заключении сделки.\n\n2. **Доказать, что обман повлиял на волю стороны**  \n   Нужно показать, что без обмана сторона не заключила бы сделку или заключила бы её на иных условиях.\n\n3. **Подать иск в суд**  \n   Для признания сделки недействительной необходимо обратиться в суд с иском о признании сделки недействительной по основанию обмана.\n\n4. **Срок исковой давности**  \n   Иск о признании сделки недействительной по основанию обмана подается в течение одного года с момента, когда сторона узнала или должна была узнать об обмане (ст. 181 ГК РФ).\n\n5. **Документы и доказательства**  \n   В исковом заявлении необходимо указать обстоятельства обмана, приложить доказательства (переписка, свидетельские показания, экспертизы и т.д.).\n\n---\n\n**Пример формулировки основания в исковом заявлении:**\n\n«Сделка была совершена под влиянием обмана, так как ответчик предоставил заведомо ложные сведения о [конкретные обстоятельства], что повлияло на волю истца при заключении договора. В связи с этим прошу признать сделку недействительной на основании ст. 178 ГК РФ.»\n\n---\n\nЕсли нужна помощь с составлением искового заявления или сбором доказательств, рекомендуется обратиться к юристу.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 3,
+        "completeness": 4
+      },
+      "reasoning": "The actual answer is relevant and provides a detailed step-by-step guide on how to recognize a transaction as invalid due to fraud, including the need to prove deception, the process of filing a claim, and the statute of limitations. However, it incorrectly references Article 178 of the Civil Code of the Russian Federation, which pertains to error, not fraud; the correct article is 179. The answer also omits mention of bilateral restitution and compensation for damages, which are important legal consequences. Overall, the answer is thorough in procedure but contains a significant legal inaccuracy and lacks some key consequences.",
+      "explanation": "The answer is detailed and relevant but cites the wrong article and omits key legal consequences."
+    },
+    {
+      "id": "faq_022",
+      "question": "Какие условия являются существенными для договора аренды недвижимости и нужна ли государственная регистрация?",
+      "answer": "Для договора аренды недвижимости существенными условиями являются:\n\n1. **Предмет договора** — точное описание арендуемого недвижимого имущества (например, адрес, площадь, характеристики).\n2. **Срок аренды** — период, на который заключается договор.\n3. **Размер арендной платы и порядок её внесения** — сумма, сроки и способ оплаты.\n4. **Права и обязанности сторон** — например, кто отвечает за ремонт, порядок пользования имуществом и т.д.\n\nЧто касается государственной регистрации:\n\n- Согласно законодательству Российской Федерации (ст. 651 Гражданского кодекса РФ), договор аренды недвижимого имущества, заключённый на срок **более одного года**, подлежит обязательной государственной регистрации в Росреестре.\n- Если срок аренды **один год или менее**, регистрация не требуется, но стороны могут её провести по своему желанию.\n\nТаким образом, для долгосрочной аренды недвижимости регистрация договора обязательна и необходима для придания договору юридической силы в отношении третьих лиц.",
+      "scores": {
+        "relevance": 5,
+        "correctness": 4,
+        "completeness": 5
+      },
+      "reasoning": "The actual answer is relevant and provides a detailed response to the question, listing the essential terms of a real estate lease agreement and explaining the requirements for state registration. It accurately identifies the object of lease as a key term and correctly describes the registration rules, though it slightly misstates the threshold for registration (should be 'not less than one year' rather than 'more than one year'). The answer is more detailed than the expected answer, mentioning additional terms (rent, rights and obligations), which, while useful, are not strictly 'essential' under the law. Overall, the answer is comprehensive and mostly accurate.",
+      "explanation": "The answer is relevant and complete, with minor inaccuracy regarding the registration threshold."
+    }
+  ],
+  "aggregates": {
+    "relevance_avg": 4.91,
+    "correctness_avg": 4.27,
+    "completeness_avg": 4.14,
+    "min_correctness": 2
+  }
+}

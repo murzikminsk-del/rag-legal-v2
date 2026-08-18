@@ -1,15 +1,25 @@
 from __future__ import annotations
 
-import json
-from typing import Any
-
 from openai.types.chat import ChatCompletion
 from pydantic import BaseModel, Field
+
+from app.observability.pii import redact_pii
+
+# цена за 1M токенов (input, output) в USD
+_PRICE_PER_1M: dict[str, tuple[float, float]] = {
+    "gpt-4.1-mini": (0.40, 1.60),
+    "gpt-4.1":      (2.00, 8.00),
+    "gpt-4o":       (5.00, 15.00),
+    "gpt-4o-mini":  (0.15, 0.60),
+}
 
 
 class Message(BaseModel):
     role: str
-    content: str
+    content: str = Field(max_length=32_000)
+
+    def __repr__(self) -> str:
+        return f"Message(role={self.role!r}, content={redact_pii(self.content)!r})"
 
 
 class Usage(BaseModel):
@@ -18,8 +28,14 @@ class Usage(BaseModel):
     total_tokens: int
 
 
+def calculate_cost(model: str, usage: Usage) -> float:
+    """Возвращает стоимость запроса в USD по публичному прайсу OpenAI."""
+    input_price, output_price = _PRICE_PER_1M.get(model, (2.00, 8.00))
+    return (usage.prompt_tokens * input_price + usage.completion_tokens * output_price) / 1_000_000
+
+
 class ChatRequest(BaseModel):
-    messages: list[Message]
+    messages: list[Message] = Field(min_length=1)
     model: str = "gpt-4.1-mini"
     temperature: float = Field(default=1.0, ge=0, le=2)
     max_tokens: int = Field(default=1024, ge=1, le=16000)
@@ -76,5 +92,3 @@ class ChatResponse(BaseModel):
 class ChatDelta(BaseModel):
     content: str | None = None
     usage: Usage | None = None
-    
-    

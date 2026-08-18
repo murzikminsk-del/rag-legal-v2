@@ -1,3 +1,4 @@
+import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -19,37 +20,28 @@ from app.observability.tracing import setup_tracing
 from app.routers import chat, health, models
 
 logger = structlog.get_logger()
+settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    settings = get_settings()
-
     setup_logging(settings.log_level)
     setup_tracing()
-
     app.state.openai = AsyncOpenAI(
         api_key=settings.llm.openai_api_key.get_secret_value(),
         timeout=settings.llm.request_timeout,
         http_client=httpx.AsyncClient(trust_env=False),
     )
     app.state.cache = aioredis.from_url(settings.redis_url, decode_responses=True, protocol=2)
-
+    app.state.canary = "CANARY_" + secrets.token_hex(4)
     logger.info("startup", message="OpenAI and Redis clients initialized")
     yield
-
     await app.state.openai.close()
     await app.state.cache.aclose()
     logger.info("shutdown", message="clients closed")
 
 
-settings = get_settings()
-
-app = FastAPI(
-    title="RAG Legal Assistant",
-    version="0.1.0",
-    lifespan=lifespan,
-)
+app = FastAPI(title="RAG Legal Assistant", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,9 +54,26 @@ app.add_middleware(
 
 
 @app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if request.url.path not in ("/chat", "/chat/stream"):
+        return await call_next(request)
+    key = f"rl:{request.client.host}"
+    cache = request.app.state.cache
+    count = await cache.incr(key)
+    if count == 1:
+        await cache.expire(key, 60)
+    if count > settings.rate_limit_per_min:
+        return JSONResponse(
+            status_code=429,
+            content={"error": {"code": "rate_limit_exceeded", "message": f"Max {settings.rate_limit_per_min} requests per minute"}},
+            headers={"Retry-After": "60"},
+        )
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def request_logging(request: Request, call_next):
     structlog.contextvars.clear_contextvars()
-
     request_id = request.headers.get("x-request-id", uuid.uuid4().hex[:12])
     structlog.contextvars.bind_contextvars(
         request_id=request_id,
@@ -73,15 +82,9 @@ async def request_logging(request: Request, call_next):
     )
     request.state.request_id = request_id
     start = time.perf_counter()
-
     response = await call_next(request)
-
     duration_ms = (time.perf_counter() - start) * 1000
-    logger.info(
-        "http_request",
-        status=response.status_code,
-        duration_ms=round(duration_ms, 1),
-    )
+    logger.info("http_request", status=response.status_code, duration_ms=round(duration_ms, 1))
     response.headers["x-request-id"] = request_id
     return response
 
@@ -94,18 +97,12 @@ async def llm_error_handler(request: Request, exc: LLMError):
         status = 504
     else:
         status = 502
-    return JSONResponse(
-        status_code=status,
-        content={"error": {"code": exc.code, "message": exc.message}},
-    )
+    return JSONResponse(status_code=status, content={"error": {"code": exc.code, "message": exc.message}})
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(request: Request, exc: RequestValidationError):
-    errors = [
-        {"field": ".".join(str(loc) for loc in e["loc"]), "message": e["msg"]}
-        for e in exc.errors()
-    ]
+    errors = [{"field": ".".join(str(loc) for loc in e["loc"]), "message": e["msg"]} for e in exc.errors()]
     return JSONResponse(status_code=422, content={"error": {"details": errors}})
 
 
