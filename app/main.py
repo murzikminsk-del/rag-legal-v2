@@ -100,6 +100,7 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
     return JSONResponse(status_code=422, content={"error": {"details": errors}})
 
 
+
 app.include_router(health.router)
 app.include_router(models.router)
 app.include_router(chat.router)
