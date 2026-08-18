@@ -16,12 +16,15 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         env_nested_delimiter="__",
         extra="ignore",
+        
     )
 
     llm: LLMSettings
     redis_url: str = "redis://localhost:6379"
     cache_ttl_seconds: int = 3600
     cors_origins: list[str] = ["http://localhost:3000"]
+    log_level: str = "INFO"
+    
 
 
 @lru_cache

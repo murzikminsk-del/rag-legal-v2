@@ -1,15 +1,17 @@
 import hashlib
 import json
-import logging
+import time
 from typing import AsyncIterator
 
 import openai
+import structlog
 from openai import AsyncOpenAI
 
 from app.core.exceptions import LLMAuthError, LLMError, LLMRateLimitError, LLMTimeoutError
+from app.observability.pii import prompt_hash, redact_pii
 from app.schemas.chat import ChatDelta, ChatRequest, ChatResponse, Usage
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class LLMService:
@@ -28,10 +30,13 @@ class LLMService:
 
         cached = await self._cache.get(key)
         if cached:
-            logger.info("cache hit key=%s", key[:16])
+            logger.info("cache_hit", key=key[:16])
             response = ChatResponse.model_validate_json(cached)
             response.cached = True
             return response
+
+        raw_prompt = req.messages[-1].content
+        start = time.perf_counter()
 
         try:
             completion = await self._client.chat.completions.create(
@@ -49,11 +54,21 @@ class LLMService:
         except openai.OpenAIError as e:
             raise LLMError(str(e)) from e
 
+        latency_ms = round((time.perf_counter() - start) * 1000, 1)
         response = ChatResponse.from_openai(completion, cached=False)
 
-        await self._cache.setex(key, self._settings.cache_ttl_seconds, response.model_dump_json())
-        logger.info("cache set key=%s ttl=%d", key[:16], self._settings.cache_ttl_seconds)
+        logger.info(
+            "llm_request_completed",
+            model=response.model,
+            input_tokens=response.usage.prompt_tokens,
+            output_tokens=response.usage.completion_tokens,
+            latency_ms=latency_ms,
+            finish_reason=response.finish_reason,
+            prompt_hash=prompt_hash(raw_prompt),
+            prompt_preview=redact_pii(raw_prompt)[:120],
+        )
 
+        await self._cache.setex(key, self._settings.cache_ttl_seconds, response.model_dump_json())
         return response
 
     async def stream(self, req: ChatRequest) -> AsyncIterator[ChatDelta]:

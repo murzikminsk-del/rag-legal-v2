@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import httpx
 
 from typing import AsyncIterator
 
@@ -14,12 +15,12 @@ logger = logging.getLogger(__name__)
 class AsyncLLMClient:
     def __init__(self, concurrency: int = 5) -> None:
         settings = get_settings()
-        import httpx2
+        
         self._client = AsyncOpenAI(
             api_key=settings.openai_api_key.get_secret_value(),
             timeout=30,
             max_retries=3,
-            http_client=httpx2.AsyncClient(trust_env=False),
+            http_client=httpx.AsyncClient(trust_env=False),
         )
         self._model = settings.default_model
         self._sem = asyncio.Semaphore(concurrency)

@@ -1,5 +1,52 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 3.6 — Observability: трейсинг, логирование, PII-маскировка
+
+Arize Phoenix для AI-трейсов, structlog JSON-логи с `request_id`, маскировка персональных данных.
+
+**Что реализовано:**
+- `compose.yaml` — добавлен сервис `phoenix` (образ `arizephoenix/phoenix:latest`, порты 6006/4317, volume `phoenix_data`); `app` получил `PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006`
+- `app/observability/tracing.py` — `setup_tracing()`: регистрирует TracerProvider через `phoenix.otel.register()`, явно передаёт endpoint `/v1/traces`; `OpenAIInstrumentor().instrument()` monkey-patching OpenAI-клиента
+- `app/observability/logging.py` — `setup_logging()`: structlog с процессорами `merge_contextvars → add_log_level → TimeStamper(iso, utc) → JSONRenderer`
+- `app/observability/pii.py` — `redact_pii()`: regex-маскировка email, телефонов (+7/8), банковских карт, ИНН, паспортов; `prompt_hash()` — sha256[:16] для корреляции без хранения текста
+- `app/main.py` — middleware: `clear_contextvars()` + `bind_contextvars(request_id, path, method)` на каждый запрос; лог `http_request` после ответа
+- `app/services/llm.py` — лог `llm_request_completed`: модель, токены, latency_ms, finish_reason, prompt_hash, prompt_preview (с PII-маскировкой, 120 символов)
+- `tests/test_pii.py` — 5 pytest-тестов на `redact_pii` и `prompt_hash`
+- `pyproject.toml` — зависимости: `openai>=2.0,<3`, `arize-phoenix-otel>=0.7.0`, `openinference-instrumentation-openai>=0.1.0`, `structlog>=24.0.0`
+
+**Результаты:**
+- Phoenix UI: http://localhost:6006 — проект `diploma-fastapi`, трейс `ChatCompletion` с `llm.model_name`, `llm.token_count.*`, input/output
+- Логи: каждый запрос даёт пару строк с одинаковым `request_id` — `llm_request_completed` (6722ms) + `http_request` (6737ms)
+- `prompt_preview` в логе содержит маскированный текст вместо сырого промпта
+- Все 5 pytest-тестов PII зелёные
+
+**Запуск:**
+```bash
+docker compose up -d --build
+```
+
+**Проверка трейсов:**
+```bash
+# Отправить запрос
+'{"messages":[{"role":"user","content":"Что такое исковая давность?"}]}' | Out-File -Encoding utf8 body.json
+curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d "@body.json"
+
+# Phoenix UI
+start http://localhost:6006
+```
+
+**Проверка логов с request_id:**
+```bash
+docker logs llm-service 2>&1 | Select-String "request_id"
+```
+
+**Тесты PII:**
+```bash
+uv run pytest tests/test_pii.py -v
+```
+
+---
+
 ## Блок 3.5 — Docker и контейнеризация
 
 Multi-stage Docker-образ, compose-стек с Redis, health/readiness эндпоинты.
