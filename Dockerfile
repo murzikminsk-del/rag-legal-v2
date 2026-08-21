@@ -15,6 +15,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev
 
 COPY app/ ./app/
+COPY alembic.ini ./
+COPY alembic/ ./alembic/
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
+
+COPY app/ ./app/
 
 
 FROM python:3.13-slim-bookworm
@@ -22,6 +29,8 @@ FROM python:3.13-slim-bookworm
 RUN useradd --create-home --uid 1000 appuser
 
 WORKDIR /app
+
+RUN mkdir -p /app/var/chats && chown -R appuser:appuser /app/var
 
 COPY --from=builder --chown=appuser:appuser /app /app
 

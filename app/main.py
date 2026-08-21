@@ -19,6 +19,8 @@ from app.observability.logging import setup_logging
 from app.observability.tracing import setup_tracing
 from app.routers import chat, health, models
 
+from app.chat.routes import router as chat_history_router
+
 logger = structlog.get_logger()
 settings = get_settings()
 
@@ -109,3 +111,4 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 app.include_router(health.router)
 app.include_router(models.router)
 app.include_router(chat.router)
+app.include_router(chat_history_router)

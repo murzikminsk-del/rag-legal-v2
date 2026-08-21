@@ -1,5 +1,55 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 4.1 — Архитектура чата и хранение истории
+
+Stateful-чат с серверным хранением истории: Repository pattern, SSE-стриминг, hybrid context strategy.
+
+**Что реализовано:**
+- `app/chat/domain.py` — доменные модели `Chat`, `ChatMessage` (Pydantic)
+- `app/chat/repository.py` — `ChatRepository` Protocol (typing.Protocol, структурная типизация)
+- `app/chat/repositories/json_repo.py` — `JsonChatRepository`: JSONL append-only, soft delete маркером
+- `app/chat/repositories/pg_repo.py` — `PostgresChatRepository`: async SQLAlchemy 2.x + asyncpg, soft delete через `deleted_at`
+- `app/chat/repositories/pg_models.py` — ORM-модели `ChatRow`, `ChatMessageRow` с `DateTime(timezone=True)`
+- `app/chat/service.py` — `ChatService`: hybrid context strategy (≤20 сообщений — всё, >20 — саммари через LLM + последние 20)
+- `app/chat/routes.py` — роутер `/chats`: POST создание, POST сообщение (SSE), GET история, DELETE очистка, GET метаданные
+- `app/chat/deps.py` — DI через `Depends` + async generators
+- `alembic/` — async миграции (asyncpg), 2 версии
+- `tests/chat/` — 15 тестов (5 contract json, 5 service context, 5 routes)
+- `docs/chat.md` — Mermaid-диаграмма потока, обоснование hybrid strategy, curl-примеры
+
+**Запуск:**
+```bash
+docker compose up -d --build
+```
+
+**Проверка чата:**
+```powershell
+# Создать чат
+$resp = Invoke-WebRequest -Uri http://localhost:8000/chats -Method POST `
+  -ContentType "application/json" `
+  -Body '{"owner_external_id":"user-1","interface":"web"}'
+$chatId = ($resp.Content | ConvertFrom-Json).chat_id
+
+# Отправить сообщение
+Invoke-WebRequest -Uri "http://localhost:8000/chats/$chatId/messages" -Method POST `
+  -ContentType "application/json" `
+  -Body '{"content":"Что такое срок исковой давности?"}'
+
+# Получить историю
+Invoke-WebRequest -Uri "http://localhost:8000/chats/$chatId/messages" | ConvertFrom-Json
+
+# Очистить историю
+Invoke-WebRequest -Uri "http://localhost:8000/chats/$chatId/messages" -Method DELETE
+```
+
+**Запуск тестов:**
+```bash
+pytest tests/chat/ -v
+# 15 passed, 5 skipped (postgres — требует Linux/Docker, asyncpg + Windows несовместимы)
+```
+
+---
+
 ## Блок 3.7 — Тестирование и оценка качества
 
 Unit-тесты с моками, golden dataset на 22 кейса, LLM-as-judge (G-Eval), пороги качества.
