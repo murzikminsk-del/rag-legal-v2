@@ -28,6 +28,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "alembic>=1.13.0",
     "tiktoken>=0.9.0",
+    "aiogram>=3.7,<4",
 ]
 
 
