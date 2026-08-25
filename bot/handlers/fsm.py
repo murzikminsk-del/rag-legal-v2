@@ -45,25 +45,13 @@ async def on_question(message: Message, state: FSMContext, backend: BackendClien
     prompt = f"Тема: {topic_label}. Вопрос: {message.text}"
     await state.clear()
 
+    from bot.services.backend_client import BackendError
+    from bot.services.streaming import stream_to_chat
     try:
         chat_id = await backend.get_or_create_chat(str(message.chat.id), "telegram")
-        sent = None
-        buffer = ""
-        async for token in await backend.send_message(chat_id, prompt):
-            buffer += token
-            if sent is None:
-                sent = await message.answer(buffer)
-            else:
-                try:
-                    await sent.edit_text(buffer)
-                except Exception:
-                    pass
-        if sent and buffer:
-            try:
-                await sent.edit_text(buffer)
-            except Exception:
-                pass
-    except (httpx.ConnectError, httpx.ReadTimeout):
-        await message.answer("Не удалось подключиться к сервису. Попробуйте позже.")
+        events = backend.send_message(chat_id, prompt)
+        await stream_to_chat(message, events)
+    except BackendError as e:
+        await message.answer(str(e))
     except Exception:
         await message.answer("Произошла ошибка. Попробуйте позже.")

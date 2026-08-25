@@ -1,3 +1,3 @@
-from bot.handlers import commands, fsm, media, text
+from bot.handlers import admin, commands, feedback, fsm, media, text
 
-routers = [commands.router, fsm.router, media.router, text.router]
+routers = [admin.router, commands.router, fsm.router, media.router, text.router, feedback.router]

@@ -28,7 +28,7 @@ class BackendClient:
         content: str,
         media: bytes | None = None,
         mime: str | None = None,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[dict]:
         files = {"media": ("file.bin", media, mime)} if media else None
         data = {"content": content}
         streaming_timeout = httpx.Timeout(connect=3.0, read=120.0, write=10.0, pool=5.0)
@@ -45,8 +45,8 @@ class BackendClient:
                     if not line.startswith("data: "):
                         continue
                     payload = json.loads(line.removeprefix("data: "))
-                    if payload["type"] == "token":
-                        yield payload["delta"]
+                    if payload["type"] in ("token", "message_saved"):
+                        yield payload
                     elif payload["type"] == "done":
                         return
         except httpx.ConnectError:
@@ -54,9 +54,24 @@ class BackendClient:
         except httpx.ReadTimeout:
             raise BackendError("Ответ занимает слишком долго")
         except httpx.HTTPStatusError as e:
+            if e.response.status_code == 403:
+                try:
+                    detail = e.response.json().get("detail", {})
+                    cats = detail.get("categories", [])
+                    msg = f"Запрос заблокирован: {', '.join(cats)}" if cats else "Запрос заблокирован модерацией"
+                except Exception:
+                    msg = "Запрос заблокирован"
+                raise BackendError(msg)
             if e.response.status_code == 429:
                 raise BackendError("Слишком много запросов, подождите минуту")
             raise BackendError("Внутренняя ошибка сервиса")
+
+    async def post_feedback(self, chat_id: UUID, message_id: str, value: str) -> None:
+        r = await self._http.post(
+            f"/chats/{chat_id}/messages/{message_id}/feedback",
+            json={"value": value},
+        )
+        r.raise_for_status()
 
     async def clear_messages(self, chat_id: UUID) -> None:
         r = await self._http.delete(f"/chats/{chat_id}/messages")

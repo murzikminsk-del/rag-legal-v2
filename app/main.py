@@ -20,6 +20,9 @@ from app.observability.tracing import setup_tracing
 from app.routers import chat, health, models
 
 from app.chat.routes import router as chat_history_router
+from app.admin.routes import router as admin_router
+from app.chat.feedback import router as feedback_router
+from app.moderation.service import ModerationService
 
 logger = structlog.get_logger()
 settings = get_settings()
@@ -35,6 +38,12 @@ async def lifespan(app: FastAPI):
         http_client=httpx.AsyncClient(trust_env=False),
     )
     app.state.cache = aioredis.from_url(settings.redis_url, decode_responses=True, protocol=2)
+    app.state.moderation = ModerationService(
+        llm=app.state.openai,
+        keywords_path=settings.moderation_keywords_path,
+        use_openai=settings.use_openai_moderation,
+    )    
+    
     app.state.canary = "CANARY_" + secrets.token_hex(4)
     logger.info("startup", message="OpenAI and Redis clients initialized")
     yield
@@ -112,3 +121,5 @@ app.include_router(health.router)
 app.include_router(models.router)
 app.include_router(chat.router)
 app.include_router(chat_history_router)
+app.include_router(admin_router)
+app.include_router(feedback_router)

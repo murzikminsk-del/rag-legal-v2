@@ -21,6 +21,29 @@ class Settings(BaseSettings):
 
     # Таймаут запроса в секундах
     request_timeout: float = 30.0
+    
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+
+    # Postgres
+    database_url: str = "postgresql+asyncpg://app:secret@localhost:5432/rag_legal"
+
+    # Observability
+    log_level: str = "INFO"
+    phoenix_collector_endpoint: str = "http://localhost:6006"
+
+    # Хранилище чатов: "json" или "postgres"
+    chat_repository: str = "json"
+    chat_storage_dir: str = "./var/chats"
+
+    # Стратегия контекста: "sliding" или "hybrid"
+    chat_context_strategy: str = "hybrid"
+
+    # Sliding window: сколько последних сообщений брать
+    chat_context_window: int = 10
+
+    # Лимит запросов в минуту (rate limiting)
+    rate_limit_per_minute: int = 30
 
 
 # lru_cache — кешируем: Settings() создаётся один раз, не при каждом вызове

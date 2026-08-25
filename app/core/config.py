@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     bot_url: str = "http://bot:9000"
     internal_token: SecretStr = SecretStr("change-me")
     bot_api_port: int = 9000
+    
+    admin_token: SecretStr = SecretStr("change-me-admin")
+    use_openai_moderation: bool = True
+    moderation_keywords_path: Path = Path("moderation_keywords.yaml")
+
+    embedding_model: str = "text-embedding-3-small"
+    embedding_cache_dir: Path = Path(".cache/embeddings")
+    embedding_batch_size: int = 100
 
 
 @lru_cache

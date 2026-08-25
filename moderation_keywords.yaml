@@ -1,0 +1,17 @@
+hate:
+  - "(?i)(убей|уничтожь|убить всех)"
+  - "(?i)(nigg|fagg)"
+
+violence:
+  - "(?i)(взорв|бомб|террорист)"
+  - "(?i)(как убить|как взорвать)"
+
+self_harm:
+  - "(?i)(как покончить|суицид|вскрыть вены)"
+
+explicit:
+  - "(?i)(порно|xxx|эротика)"
+
+jailbreak:
+  - "(?i)(ignore previous instructions|забудь все инструкции|ты теперь)"
+  - "(?i)(DAN mode|developer mode|jailbreak)"

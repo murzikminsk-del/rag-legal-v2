@@ -18,6 +18,7 @@ COPY app/ ./app/
 COPY bot/ ./bot/
 COPY alembic.ini ./
 COPY alembic/ ./alembic/
+COPY moderation_keywords.yaml ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev

@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from bot.services.backend_client import BackendClient, BackendError
-from bot.web import stream_to_chat
+from bot.services.streaming import stream_to_chat
 
 router = Router()
 
@@ -14,8 +14,8 @@ async def handle_text(message: Message, backend: BackendClient, state: FSMContex
         return
     try:
         chat_id = await backend.get_or_create_chat(str(message.chat.id), "telegram")
-        tokens = backend.send_message(chat_id, message.text)
-        await stream_to_chat(message, tokens)
+        events = backend.send_message(chat_id, message.text)
+        await stream_to_chat(message, events)
     except BackendError as e:
         await message.answer(str(e))
     except Exception:

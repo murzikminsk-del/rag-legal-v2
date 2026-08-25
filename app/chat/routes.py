@@ -50,6 +50,9 @@ async def send_message(
     service: ChatService = Depends(get_chat_service),
     llm=Depends(get_openai),
 ) -> StreamingResponse:
+    # check_input здесь — до StreamingResponse, HTTPException обработается нормально
+    await service.check_input(content)
+
     media_part: dict | None = None
     media_meta: dict | None = None
 
@@ -63,10 +66,10 @@ async def send_message(
         }
 
     async def generator():
-        async for delta in service.send_message(
+        async for event in service.send_message(
             chat_id, content, media_part=media_part, media_meta=media_meta
         ):
-            yield f"data: {json.dumps({'type': 'token', 'delta': delta}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     return StreamingResponse(generator(), media_type="text/event-stream")

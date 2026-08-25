@@ -1,4 +1,5 @@
 import tiktoken
+from fastapi import HTTPException
 from openai import AsyncOpenAI
 from uuid import UUID
 from typing import AsyncIterator
@@ -7,6 +8,7 @@ import structlog
 
 from app.chat.domain import Chat, ChatMessage
 from app.chat.repository import ChatRepository
+from app.moderation.service import ModerationService
 
 log = structlog.get_logger()
 
@@ -19,6 +21,7 @@ SUMMARIZE_PROMPT = (
     "Явно перечисли: темы, имена, числа, решения, нерешённые вопросы. "
     "Отвечай на том же языке, что и диалог."
 )
+MODERATION_FALLBACK = "Не могу показать ответ — он мог нарушить правила."
 
 
 def _enc():
@@ -45,6 +48,7 @@ def fit_to_budget(messages: list[dict], budget: int) -> list[dict]:
         non_system.pop(0)
     return system + non_system
 
+
 def _msg_to_dict(msg: ChatMessage) -> dict:
     if msg.role == "user" and msg.media_refs and msg.media_refs.get("part"):
         content = [
@@ -56,9 +60,15 @@ def _msg_to_dict(msg: ChatMessage) -> dict:
 
 
 class ChatService:
-    def __init__(self, repository: ChatRepository, llm: AsyncOpenAI) -> None:
+    def __init__(
+        self,
+        repository: ChatRepository,
+        llm: AsyncOpenAI,
+        moderation: ModerationService,
+    ) -> None:
         self._repo = repository
         self._llm = llm
+        self._moderation = moderation
 
     async def create_chat(
         self,
@@ -71,13 +81,26 @@ class ChatService:
     async def get_chat(self, chat_id: UUID) -> Chat | None:
         return await self._repo.get_chat(chat_id)
 
+    async def check_input(self, content: str) -> None:
+        """Вызывать из route ДО StreamingResponse — здесь можно поднять HTTPException."""
+        result = await self._moderation.check_input(content)
+        if not result.allowed:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "moderation_blocked",
+                    "categories": result.categories,
+                    "reasons": result.reasons,
+                },
+            )
+
     async def send_message(
         self,
         chat_id: UUID,
         user_content: str,
         media_part: dict | None = None,
         media_meta: dict | None = None,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[dict]:
         user_msg = ChatMessage(
             chat_id=chat_id,
             role="user",
@@ -94,7 +117,7 @@ class ChatService:
         budget = CONTEXT_WINDOW - RESPONSE_TOKENS - SAFETY_MARGIN
         messages = fit_to_budget(messages, budget)
 
-        collected = []
+        collected: list[str] = []
         try:
             stream = await self._llm.chat.completions.create(
                 model="gpt-4.1-mini",
@@ -108,16 +131,17 @@ class ChatService:
                 delta = chunk.choices[0].delta.content
                 if delta:
                     collected.append(delta)
-                    yield delta
+                    yield {"type": "token", "delta": delta}
         except Exception:
             log.exception("stream_interrupted", chat_id=str(chat_id))
-        finally:
-            if collected:
-                full_text = "".join(collected)
-                assistant_msg = ChatMessage(
-                    chat_id=chat_id, role="assistant", content=full_text
-                )
-                await self._repo.append_message(chat_id, assistant_msg)
+
+        if collected:
+            full_text = "".join(collected)
+            output_result = await self._moderation.check_output(full_text)
+            stored_text = full_text if output_result.allowed else MODERATION_FALLBACK
+            assistant_msg = ChatMessage(chat_id=chat_id, role="assistant", content=stored_text)
+            await self._repo.append_message(chat_id, assistant_msg)
+            yield {"type": "message_saved", "message_id": str(assistant_msg.id)}
 
     async def clear_history(self, chat_id: UUID) -> None:
         await self._repo.soft_delete_messages(chat_id)
