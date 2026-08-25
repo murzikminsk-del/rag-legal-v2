@@ -1,5 +1,48 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 5.1 — Эмбеддинги и семантический поиск
+
+Фундамент RAG-пайплайна: embedding-сервис с дисковым кешем и батчингом.
+
+**Выбор модели:** `text-embedding-3-small` (OpenAI)
+- Уже используемая инфра, без дополнительных сервисов
+- Хорошая поддержка русского языка (MTEB multilingual Retrieval)
+- $0.020/1M токенов → 50 документов × ~5K токенов ≈ $0.005 на начальную индексацию
+- Симметричная модель — единый `embed_texts()`, без E5-префиксов
+- Размерность 1536, можно урезать до 512 через `dimensions=` без потери нормализации
+
+**Что реализовано:**
+- `app/services/embeddings.py` — `embed_texts(texts, model=None)`: батчинг по 100 текстов, `diskcache` на диске (`.cache/embeddings/`), retry через `tenacity` на сетевые ошибки; ключ кеша = `sha256(model + text)` — смена модели в `.env` автоматически использует новые ключи
+- `tests/eval/mini_benchmark.json` — 8 пар (query, relevant, irrelevant) из предметной области юридического ассистента: расторжение договора, форс-мажор, due diligence, неустойка, доверенность, NDA, внутреннее согласование, исковая давность
+- `app/core/config.py` — добавлены `embedding_model`, `embedding_cache_dir`, `embedding_batch_size`
+
+**Доказательство кеша:**
+```powershell
+$env:PYTHONPATH = "."
+python -u -c "
+import asyncio, time
+from app.services.embeddings import embed_texts
+texts = ['Каков порядок расторжения договора поставки в одностороннем порядке?']
+t0 = time.perf_counter(); asyncio.run(embed_texts(texts)); print('1й вызов:', round(time.perf_counter()-t0, 3), 's')
+t0 = time.perf_counter(); asyncio.run(embed_texts(texts)); print('2й вызов:', round(time.perf_counter()-t0, 3), 's')
+"
+# 1й вызов: 3.416 s  (API)
+# 2й вызов: 0.001 s  (диск, x3400)
+
+Доказательство смены модели:
+python -u -c "
+import asyncio, time
+from app.services.embeddings import embed_texts
+texts = ['Каков порядок расторжения договора поставки в одностороннем порядке?']
+t0 = time.perf_counter(); asyncio.run(embed_texts(texts, model='text-embedding-3-small')); print('small (кеш):', round(time.perf_counter()-t0, 4), 's')
+t0 = time.perf_counter(); asyncio.run(embed_texts(texts, model='text-embedding-3-large')); print('large (API):', round(time.perf_counter()-t0, 4), 's')
+"
+# small (кеш): 0.0125 s
+# large (API):  2.315 s
+
+Переменные окружения (.env):
+EMBEDDING_MODEL=text-embedding-3-small
+
 ## Блок 4.4 — Модерация, Admin API, Feedback, Broadcast
 
 Production-обвязка чат-сервиса: двухслойная модерация, admin REST API, обратная связь 👍/👎, рассылка сообщений.
