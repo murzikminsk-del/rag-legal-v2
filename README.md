@@ -1,5 +1,49 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 4.3 — Мультимодальность и streaming
+
+Бот принимает фото, голос и PDF/DOCX; backend конвертирует медиа в content-part для LLM. Обратный канал backend→bot через `/notify`.
+
+**Что реализовано:**
+- `app/chat/media.py` — `media_to_part`: image→base64 image_url-part, audio→Whisper-1→text-part, PDF→pypdf→text-part, DOCX→python-docx→text-part
+- `app/chat/domain.py` — `ChatMessage.media_refs: dict | None` — кеш content-part для повторных LLM-вызовов
+- `app/chat/routes.py` — `/messages` на multipart/form-data; SSE: `{"type":"token","delta":"..."}` / `{"type":"done"}`; `POST /{chat_id}/system-message` для демо уведомлений
+- `app/chat/service.py` — `_build_context` восстанавливает multimodal content из `media_refs.part`; `count_tokens` обрабатывает list-content
+- `app/services/notifier.py` — `notify_user(chat_id_tg, text)`: POST на `bot:9000/notify`
+- `bot/web.py` — FastAPI `/notify` endpoint (401 без токена) + `stream_to_chat` helper
+- `bot/handlers/media.py` — handlers для F.photo (≤2 МБ), F.voice (ogg), F.document (PDF/DOCX ≤10 МБ)
+- `bot/__main__.py` — uvicorn + polling через `asyncio.gather`
+
+**Запуск:**
+```bash
+docker compose up -d --build
+```
+
+**Проверка /notify:**
+```powershell
+# Без токена — 422
+Invoke-WebRequest -Uri http://localhost:9000/notify -Method POST -ContentType "application/json" -Body '{"chat_id": 123, "text": "test"}'
+
+# С токеном
+Invoke-WebRequest -Uri http://localhost:9000/notify -Method POST -ContentType "application/json" `
+  -Headers @{"X-Internal-Token"="super-secret-internal-token-change-me"} `
+  -Body "{`"chat_id`": <tg_id>, `"text`": `"Тест от backend`"}"
+```
+
+**Тесты:**
+```bash
+uv run pytest tests/app/chat/test_media.py tests/app/chat/test_whisper.py tests/bot/test_backend_client.py -v
+# 7 passed
+```
+
+---
+
+## Блок 4.2 — Telegram-бот
+
+Telegram-бот как тонкий клиент к chat-сервису (aiogram 3, BackendClient, FSM /ask).
+
+---
+
 ## Блок 4.1 — Архитектура чата и хранение истории
 
 Stateful-чат с серверным хранением истории: Repository pattern, SSE-стриминг, hybrid context strategy.
