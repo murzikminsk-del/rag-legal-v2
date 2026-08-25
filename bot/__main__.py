@@ -3,6 +3,7 @@ import logging
 import ssl
 
 import httpx
+import uvicorn
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -11,6 +12,7 @@ from aiogram.types import BotCommand
 from bot.config import settings
 from bot.handlers import routers
 from bot.services.backend_client import BackendClient
+from bot.web import build_notify_api
 
 
 class NoVerifySession(AiohttpSession):
@@ -30,7 +32,7 @@ async def main() -> None:
 
     http = httpx.AsyncClient(
         base_url=settings.backend_url,
-        timeout=httpx.Timeout(30.0),
+        timeout=httpx.Timeout(connect=3.0, read=60.0, write=10.0, pool=5.0),
         trust_env=False,
     )
     backend = BackendClient(http)
@@ -47,8 +49,12 @@ async def main() -> None:
         BotCommand(command="help", description="Справка"),
     ])
 
+    api = build_notify_api(bot, settings.internal_token.get_secret_value())
+    config = uvicorn.Config(api, host="0.0.0.0", port=settings.bot_api_port, log_level="info")
+    server = uvicorn.Server(config)
+
     try:
-        await dp.start_polling(bot)
+        await asyncio.gather(dp.start_polling(bot), server.serve())
     finally:
         await backend.aclose()
         await bot.session.close()
@@ -56,3 +62,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+    

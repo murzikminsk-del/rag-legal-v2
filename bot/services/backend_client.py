@@ -1,3 +1,4 @@
+import json
 from typing import AsyncIterator
 from uuid import UUID
 
@@ -28,21 +29,34 @@ class BackendClient:
         media: bytes | None = None,
         mime: str | None = None,
     ) -> AsyncIterator[str]:
-        return self._stream_tokens(chat_id, content)
-
-    async def _stream_tokens(self, chat_id: UUID, content: str) -> AsyncIterator[str]:
-        async with self._http.stream(
-            "POST",
-            f"/chats/{chat_id}/messages",
-            json={"content": content},
-        ) as resp:
-            resp.raise_for_status()
-            async for line in resp.aiter_lines():
-                if line.startswith("data: "):
-                    token = line[6:]
-                    if token == "[DONE]":
-                        break
-                    yield token
+        files = {"media": ("file.bin", media, mime)} if media else None
+        data = {"content": content}
+        streaming_timeout = httpx.Timeout(connect=3.0, read=120.0, write=10.0, pool=5.0)
+        try:
+            async with self._http.stream(
+                "POST",
+                f"/chats/{chat_id}/messages",
+                data=data,
+                files=files,
+                timeout=streaming_timeout,
+            ) as r:
+                r.raise_for_status()
+                async for line in r.aiter_lines():
+                    if not line.startswith("data: "):
+                        continue
+                    payload = json.loads(line.removeprefix("data: "))
+                    if payload["type"] == "token":
+                        yield payload["delta"]
+                    elif payload["type"] == "done":
+                        return
+        except httpx.ConnectError:
+            raise BackendError("Сервис недоступен, попробуйте позже")
+        except httpx.ReadTimeout:
+            raise BackendError("Ответ занимает слишком долго")
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                raise BackendError("Слишком много запросов, подождите минуту")
+            raise BackendError("Внутренняя ошибка сервиса")
 
     async def clear_messages(self, chat_id: UUID) -> None:
         r = await self._http.delete(f"/chats/{chat_id}/messages")
@@ -50,3 +64,7 @@ class BackendClient:
 
     async def aclose(self) -> None:
         await self._http.aclose()
+
+
+class BackendError(Exception):
+    pass

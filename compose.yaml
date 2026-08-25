@@ -12,6 +12,8 @@ services:
       REDIS_URL: redis://redis:6379/0
       PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006
       DATABASE_URL: postgresql+asyncpg://app:secret@postgres:5432/rag_legal
+      BOT_URL: http://bot:9000
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN}
     depends_on:
       redis:
         condition: service_healthy
@@ -67,6 +69,22 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+
+  bot:
+    build: .
+    image: llm-service:dev
+    container_name: llm-bot
+    restart: unless-stopped
+    command: ["python", "-m", "bot"]
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    environment:
+      BACKEND_URL: http://app:8000
+    depends_on:
+      app:
+        condition: service_healthy
 
 volumes:
   redis_data:

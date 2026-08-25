@@ -29,7 +29,12 @@ def count_tokens(messages: list[dict]) -> int:
     enc = _enc()
     total = 2
     for msg in messages:
-        total += 4 + len(enc.encode(msg.get("content", "")))
+        content = msg.get("content", "")
+        if isinstance(content, list):
+            text = " ".join(p.get("text", "") for p in content if p.get("type") == "text")
+        else:
+            text = content or ""
+        total += 4 + len(enc.encode(text))
     return total
 
 
@@ -39,6 +44,15 @@ def fit_to_budget(messages: list[dict], budget: int) -> list[dict]:
     while non_system and count_tokens(system + non_system) > budget:
         non_system.pop(0)
     return system + non_system
+
+def _msg_to_dict(msg: ChatMessage) -> dict:
+    if msg.role == "user" and msg.media_refs and msg.media_refs.get("part"):
+        content = [
+            {"type": "text", "text": msg.content},
+            msg.media_refs["part"],
+        ]
+        return {"role": "user", "content": content}
+    return {"role": msg.role, "content": msg.content}
 
 
 class ChatService:
@@ -58,15 +72,24 @@ class ChatService:
         return await self._repo.get_chat(chat_id)
 
     async def send_message(
-        self, chat_id: UUID, user_content: str
+        self,
+        chat_id: UUID,
+        user_content: str,
+        media_part: dict | None = None,
+        media_meta: dict | None = None,
     ) -> AsyncIterator[str]:
-        user_msg = ChatMessage(chat_id=chat_id, role="user", content=user_content)
+        user_msg = ChatMessage(
+            chat_id=chat_id,
+            role="user",
+            content=user_content,
+            media_refs=media_meta,
+        )
         await self._repo.append_message(chat_id, user_msg)
 
         chat = await self._repo.get_chat(chat_id)
         history = await self._repo.list_messages(chat_id, limit=200)
 
-        messages = await self._build_context(chat, history)
+        messages = await self._build_context(chat, history, current_media_part=media_part)
 
         budget = CONTEXT_WINDOW - RESPONSE_TOKENS - SAFETY_MARGIN
         messages = fit_to_budget(messages, budget)
@@ -77,8 +100,11 @@ class ChatService:
                 model="gpt-4.1-mini",
                 messages=messages,
                 stream=True,
+                stream_options={"include_usage": True},
             )
             async for chunk in stream:
+                if not chunk.choices:
+                    continue
                 delta = chunk.choices[0].delta.content
                 if delta:
                     collected.append(delta)
@@ -97,7 +123,8 @@ class ChatService:
         await self._repo.soft_delete_messages(chat_id)
 
     async def _build_context(
-        self, chat: Chat | None, history: list[ChatMessage]
+        self, chat: Chat | None, history: list[ChatMessage],
+        current_media_part: dict | None = None,
     ) -> list[dict]:
         messages: list[dict] = []
 
@@ -106,7 +133,7 @@ class ChatService:
 
         if len(history) <= KEEP_RECENT:
             for msg in history:
-                messages.append({"role": msg.role, "content": msg.content})
+                messages.append(_msg_to_dict(msg))
             return messages
 
         old = history[:-KEEP_RECENT]
@@ -124,6 +151,6 @@ class ChatService:
 
         messages.append({"role": "system", "content": f"[Саммари предыдущего диалога]\n{summary}"})
         for msg in recent:
-            messages.append({"role": msg.role, "content": msg.content})
+            messages.append(_msg_to_dict(msg))
 
         return messages

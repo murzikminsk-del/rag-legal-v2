@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     chat_storage_dir: Path = Path("./var/chats")
     chat_context_strategy: Literal["sliding", "hybrid"] = "sliding"
     chat_context_window: int = 10
+    bot_url: str = "http://bot:9000"
+    internal_token: SecretStr = SecretStr("change-me")
+    bot_api_port: int = 9000
 
 
 @lru_cache

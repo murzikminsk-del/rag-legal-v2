@@ -16,6 +16,7 @@ class ChatMessage(BaseModel):
     content: str
     tokens: int | None = None
     created_at: datetime = Field(default_factory=_now)
+    media_refs: dict | None = None
 
 
 class Chat(BaseModel):
