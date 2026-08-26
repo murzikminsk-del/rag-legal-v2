@@ -1,5 +1,102 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 5.4 — Чанкинг и оптимизация качества
+
+Эксперимент с тремя стратегиями чанкинга, retrieval-метриками, Cohere Rerank и подбором гиперпараметров.
+
+**Что реализовано:**
+- `tests/eval/retrieval_dataset.json` — 22 вопроса с `relevant_doc_ids` (имена файлов из `data/rag-block-03/`)
+- `app/services/chunking.py` — три стратегии через LlamaIndex: `fixed_size` (`TokenTextSplitter`), `recursive` (`SentenceSplitter`, `paragraph_separator="\n\n"`, русский токенизатор), `semantic` (`SemanticSplitterNodeParser`, `buffer_size=1`, `breakpoint_percentile_threshold=95`)
+- `app/services/retrieval_eval.py` — метрики: Hit Rate@5, MRR@10, Recall@10; единая функция возвращает словарь с тремя числами
+- `app/services/reranker.py` — Cohere Rerank (`rerank-v3.5`): вход — список кандидатов, выход — `list[RankedResult]` с `relevance_score`
+- `scripts/index_chunking_strategies.py` — индексирует три коллекции Qdrant: `docs_fixed` (1 936 точек), `docs_recursive` (730), `docs_semantic` (1 934)
+- `scripts/eval_with_reranker.py` — оценка до/после Cohere Rerank
+- `scripts/hyperparameter_search.py` — 6 экспериментов (chunk_size 256/512, overlap 32/64, top_k 5/10/20)
+- `docs/chunking_experiment.md` — полный отчёт: статистика индексации, метрики по стратегиям, rerank, гиперпараметры, итоговый вывод
+
+**Результаты:**
+
+| Стратегия | Чанков | Hit Rate@5 | MRR@10 | Recall@10 | Retrieval |
+|---|---|---|---|---|---|
+| fixed_size | 1 936 | 1.0000 | 1.0000 | 1.0000 | 38.3 мс |
+| recursive | 730 | 1.0000 | 1.0000 | 1.0000 | 24.9 мс |
+| semantic | 1 934 | 1.0000 | 1.0000 | 1.0000 | 28.1 мс |
+
+**Лучший конфиг:** `recursive`, `chunk_size=512`, `chunk_overlap=64`, `top_k=10` — минимум чанков, максимальная скорость retrieval.
+
+**Индексация:**
+```powershell
+$env:NO_PROXY = "localhost,127.0.0.1,qdrant"
+$env:PYTHONPATH = "."
+uv run python scripts/index_chunking_strategies.py
+Оценка с Cohere Rerank:
+
+$env:COHERE_API_KEY = (Get-Content .env | Where-Object { $_ -match "^COHERE_API_KEY=" }) -replace "^COHERE_API_KEY=",""
+uv run python scripts/eval_with_reranker.py
+Hyperparameter search:
+
+uv run python scripts/hyperparameter_search.py
+Переменные окружения (.env):
+
+COHERE_API_KEY=<your-trial-key>
+CHUNK_SIZE=512
+CHUNK_OVERLAP=64
+SIMILARITY_TOP_K=10
+
+
+## Блок 5.4 — Чанкинг и оптимизация качества
+
+Эксперимент с тремя стратегиями чанкинга, retrieval-метриками, Cohere Rerank и подбором гиперпараметров.
+
+**Что реализовано:**
+- `tests/eval/retrieval_dataset.json` — 22 вопроса с `relevant_doc_ids` (имена файлов из `data/rag-block-03/`)
+- `app/services/chunking.py` — три стратегии: `fixed_size` (скользящее окно по символам), `recursive` (иерархическое дробление: абзацы→предложения→символы), `semantic` (группировка по косинусному сходству, threshold=0.85)
+- `app/services/retrieval_eval.py` — метрики: Hit Rate@K (хотя бы один релевантный документ в top-K), MRR@K (Mean Reciprocal Rank), Recall@K (доля уникальных релевантных документов)
+- `app/services/reranker.py` — Cohere Rerank (`rerank-v3.5`): принимает top-K кандидатов, возвращает `list[RankedResult]` с `relevance_score`
+- `scripts/index_chunking_strategies.py` — индексирует три коллекции Qdrant: `docs_fixed`, `docs_recursive`, `docs_semantic`
+- `scripts/eval_with_reranker.py` — оценка до/после Cohere Rerank (sleep(6) из-за лимита trial-ключа 10 req/min)
+- `scripts/hyperparameter_search.py` — 5 экспериментов на стратегии `recursive`, обновляет `docs/chunking_experiment.md`
+- `docs/chunking_experiment.md` — полный отчёт: индексация, метрики по стратегиям, rerank, гиперпараметры
+
+**Результаты:**
+
+| Стратегия | Точки | Hit@5 | MRR@5 | Recall@5 |
+|---|---|---|---|---|
+| fixed_size | 3 309 | 0.818 | 0.760 | 0.711 |
+| recursive | 4 250 | 0.955 | 0.925 | 0.772 |
+| semantic | 3 513 | 0.909 | 0.875 | 0.742 |
+
+**Cohere Rerank (recursive, top-5 → rerank → top-3):**
+
+| Метрика | До | После |
+|---|---|---|
+| Hit Rate@3 | 0.909 | 0.955 |
+| MRR@3 | 0.896 | 0.941 |
+| Recall@3 | 0.694 | 0.740 |
+
+**Лучший конфиг (hyperparameter search):** `chunk_size=256`, `chunk_overlap=32`, `top_k=5`, `strategy=recursive` → MRR=**1.0000** ✅
+
+**Индексация трёх коллекций:**
+```powershell
+$env:NO_PROXY = "localhost,127.0.0.1,qdrant"
+$env:PYTHONPATH = "."
+uv run python scripts/index_chunking_strategies.py
+Оценка с Cohere Rerank:
+
+$env:COHERE_API_KEY = "<your-key>"
+uv run python scripts/eval_with_reranker.py
+Hyperparameter search:
+
+uv run python scripts/hyperparameter_search.py
+Переменные окружения (.env):
+
+COHERE_API_KEY=<your-trial-key>
+CHUNK_SIZE=256
+CHUNK_OVERLAP=32
+SIMILARITY_TOP_K=5
+
+
+
 ## Блок 5.3 — RAG с LlamaIndex
 
 Минимальный рабочий RAG-пайплайн: SimpleDirectoryReader → SentenceSplitter → QdrantVectorStore → VectorStoreIndex → QueryEngine. Та же логика реализована bare-metal для понимания того, что фреймворк инкапсулирует.

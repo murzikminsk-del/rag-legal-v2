@@ -40,6 +40,7 @@ dependencies = [
     "tqdm>=4.66",
     "llama-index>=0.14.24",
     "llama-index-vector-stores-qdrant>=0.10.3",
+    "cohere>=7.0.9",
 ]
 
 

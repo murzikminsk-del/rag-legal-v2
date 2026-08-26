@@ -55,8 +55,9 @@ class Settings(BaseSettings):
     rag_corpus_dir: Path = Path("data/rag-block-03")
     chunk_size: int = 512
     chunk_overlap: int = 64
-    similarity_top_k: int = 3
+    similarity_top_k: int = 10
     rag_score_threshold: float = 0.3
+    cohere_api_key: str | None = None
 
 
 @lru_cache
