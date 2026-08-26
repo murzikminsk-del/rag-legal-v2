@@ -1,5 +1,41 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 5.2 — Векторные базы данных
+
+Qdrant как хранилище эмбеддингов: коллекция с payload-индексами, загрузка 100+ документов, поиск с фильтрами.
+
+**Что реализовано:**
+- `compose.yaml` — сервис `qdrant` (образ `qdrant/qdrant:v1.14.0`, порты 6333/6334, named volume `qdrant_storage`, healthcheck по TCP, API-ключ из `.env`)
+- `app/core/config.py` — добавлены `qdrant_url`, `qdrant_api_key`, `qdrant_collection`, `embedding_dim`
+- `app/services/vector_store.py` — `VectorStore`: тонкая обёртка над `AsyncQdrantClient`; методы `ensure_collection`, `upsert` (батчи по 256), `search` (возвращает `list[ScoredPoint]`); singleton через `get_vector_store()`; вызывается в `lifespan` FastAPI
+- `scripts/load_to_qdrant.py` — идемпотентный скрипт: создаёт коллекцию `documents` (COSINE, dim=1536), payload-индексы (`source`, `created_at`, `category`), загружает 100 юридических чанков через `embed_texts()`, upsert батчами по 128, tqdm-прогрессбар
+- `scripts/compare_metrics.py` — эксперимент cosine vs dot: 2 временные коллекции, 5 запросов, таблица совпадений
+- `docs/vector_store.md` — таблица cosine vs dot (5 запросов, все совпали → sanity check), выбор COSINE, три примера фильтров (match, datetime range, must+must_not) с кодом и top-3 результатами
+- `tests/test_vector_store.py` — 3 smoke-теста: `ensure_collection`, `upsert+search`, `search_with_filter`
+
+**Результаты:**
+- 100 точек загружены, повторный запуск = 100 (идемпотентность ✅)
+- Cosine vs Dot: все 5 запросов совпали (OpenAI нормализует векторы)
+- `pytest tests/test_vector_store.py` → 3 passed
+
+**Запуск Qdrant:**
+```bash
+docker compose up -d qdrant
+```
+
+**Загрузка данных:**
+```powershell
+$env:HTTPS_PROXY = "socks5://127.0.0.1:10808"
+$env:NO_PROXY = "localhost,127.0.0.1"
+$env:PYTHONPATH = "."
+$env:LLM__OPENAI_API_KEY = (Get-Content .env | Where-Object { $_ -match "^LLM__OPENAI_API_KEY=" }) -replace "^LLM__OPENAI_API_KEY=",""
+python -u scripts/load_to_qdrant.py
+```
+
+**Дашборд:** http://localhost:6333/dashboard
+
+---
+
 ## Блок 5.1 — Эмбеддинги и семантический поиск
 
 Фундамент RAG-пайплайна: embedding-сервис с дисковым кешем и батчингом.

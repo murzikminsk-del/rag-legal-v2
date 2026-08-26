@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_cache_dir: Path = Path(".cache/embeddings")
     embedding_batch_size: int = 100
+    
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str | None = None
+    qdrant_collection: str = "documents"
+    embedding_dim: int = 1536
 
 
 @lru_cache

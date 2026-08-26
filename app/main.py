@@ -23,6 +23,7 @@ from app.chat.routes import router as chat_history_router
 from app.admin.routes import router as admin_router
 from app.chat.feedback import router as feedback_router
 from app.moderation.service import ModerationService
+from app.services.vector_store import get_vector_store
 
 logger = structlog.get_logger()
 settings = get_settings()
@@ -44,11 +45,16 @@ async def lifespan(app: FastAPI):
         use_openai=settings.use_openai_moderation,
     )    
     
+    vector_store = get_vector_store()
+    await vector_store.ensure_collection()
+    app.state.vector_store = vector_store    
+    
     app.state.canary = "CANARY_" + secrets.token_hex(4)
     logger.info("startup", message="OpenAI and Redis clients initialized")
     yield
     await app.state.openai.close()
     await app.state.cache.aclose()
+    await app.state.vector_store.close()
     logger.info("shutdown", message="clients closed")
 
 
