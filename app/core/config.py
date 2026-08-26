@@ -49,6 +49,14 @@ class Settings(BaseSettings):
     qdrant_api_key: str | None = None
     qdrant_collection: str = "documents"
     embedding_dim: int = 1536
+    
+    rag_collection: str = "rag_block_03"
+    rag_baremetal_collection: str = "rag_block_03_baremetal"
+    rag_corpus_dir: Path = Path("data/rag-block-03")
+    chunk_size: int = 512
+    chunk_overlap: int = 64
+    similarity_top_k: int = 3
+    rag_score_threshold: float = 0.3
 
 
 @lru_cache

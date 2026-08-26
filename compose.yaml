@@ -14,6 +14,8 @@ services:
       DATABASE_URL: postgresql+asyncpg://app:secret@postgres:5432/rag_legal
       BOT_URL: http://bot:9000
       INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+      NO_PROXY: "qdrant,localhost,127.0.0.1"
+      QDRANT_URL: http://qdrant:6333
     depends_on:
       redis:
         condition: service_healthy

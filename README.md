@@ -1,5 +1,30 @@
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 5.3 — RAG с LlamaIndex
+
+Минимальный рабочий RAG-пайплайн: SimpleDirectoryReader → SentenceSplitter → QdrantVectorStore → VectorStoreIndex → QueryEngine. Та же логика реализована bare-metal для понимания того, что фреймворк инкапсулирует.
+
+**Что реализовано:**
+- `app/services/rag.py` — `RAGService`: `build()` (идемпотентная индексация через LlamaIndex) и `answer(question) -> dict`; при первом запуске создаёт коллекцию `rag_block_03` через `from_documents`, при повторном подключается через `from_vector_store`; возвращает `{answer, top_score, sources}`
+- `app/services/rag_baremetal.py` — `BareMetalRAG`: тот же пайплайн вручную: чтение файлов → наивный чанкинг → `embed_texts()` → upsert в `rag_block_03_baremetal` → `query_points()` → сборка промпта → `openai.chat.completions.create()`; совместимый формат ответа
+- `app/routers/rag.py` — `POST /rag/query`: принимает `{"question": "..."}`, возвращает `{answer, top_score, sources}`; индекс берётся из `app.state.rag`, инициализируется один раз в `lifespan`
+- `data/rag-block-03/` — корпус из 10 документов (реальные юридические шаблоны + 1 нерелевантный для проверки fallback)
+- `docs/rag.md` — версии зависимостей, решение по коллекции, таблица LlamaIndex vs bare-metal, прогон 5 вопросов
+
+**Результаты:**
+- Индексировано 780 нод из 10 документов
+- 3 хороших вопроса: top_score 0.472–0.655, релевантные ответы ✅
+- 1 средний (синтез): top_score 0.614, ответ корректный ✅
+- 1 вне базы («Как приготовить борщ?»): top_score 0.188 < порога 0.3 → fallback ✅
+
+**Запуск RAG отдельно:**
+```powershell
+$env:NO_PROXY = "localhost,127.0.0.1"
+uv run python -m app.services.rag
+Проверка эндпоинта:
+
+Invoke-RestMethod -Method POST -Uri http://localhost:8000/rag/query -ContentType "application/json" -Body '{"question": "Кто является арендатором?"}'
+
 ## Блок 5.2 — Векторные базы данных
 
 Qdrant как хранилище эмбеддингов: коллекция с payload-индексами, загрузка 100+ документов, поиск с фильтрами.
