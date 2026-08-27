@@ -1,5 +1,43 @@
 # ИИ-ассистент для анализа юридических документов
 
+# ИИ-ассистент для анализа юридических документов
+
+## Блок 5.5 — Сборка RAG-пайплайна и подключение бота
+
+Полный production RAG: индексация → retrieval → rerank → score-guard → LLM → SSE-стриминг в Telegram-бот.
+
+**Что реализовано:**
+- `app/services/rag.py` — `RAGService`: `build()` подключается к коллекции `rag_legal_v2`; `retrieve_context(question, chat_history)` — только retrieval с конденсацией follow-up вопросов; `answer()` — полный пайплайн с цитатами [1][2]
+- `app/services/ingestion.py` — `IngestionService`: `IngestionPipeline` с `DocstoreStrategy.UPSERTS`; metadata-обогащение (source, category, version, author для DOCX); поддержка MD/PDF/DOCX/HTML
+- `app/routers/rag.py` — `POST /rag/query` (синхронный RAG без чата); `POST /rag/documents/upload` (фоновая индексация, `202 Accepted`)
+- `app/chat/routes.py` — RAG-контекст получается из `app.state.rag` до вызова LLM; история чата передаётся для конденсации follow-up вопросов
+- `app/chat/service.py` — `_build_context()` принимает `rag_context` и добавляет его как system-сообщение с инструкцией по цитированию
+- `bot/handlers/text.py` — «⏳ Думаю...» отправляется до начала стрима
+- `bot/services/streaming.py` — time-based debounce 700 мс; поддержка placeholder-сообщения
+- `docs/rag.md` — Mermaid-диаграмма двух контуров, параметры chunking, reranker, threshold с обоснованием, endpoints
+- `docs/data_inventory.md` — 30 документов, все .md, ~1.84 МБ, 5 категорий
+
+**Результаты:**
+- Коллекция `rag_legal_v2`: 901 нода из 30 документов
+- Retrieval: `similarity_top_k=10` → Cohere Rerank `top_n=5` → score-guard `threshold=0.3`
+- Multi-turn: короткие follow-up вопросы конденсируются через LLM перед retrieval
+- Score-guard: вопросы вне базы → «В предоставленном контексте отсутствует информация», без галлюцинации
+
+**Быстрый старт:**
+```bash
+cp .env.example .env
+# заполнить LLM__OPENAI_API_KEY, TELEGRAM_BOT_TOKEN, QDRANT_API_KEY
+docker compose up -d
+Индексация корпуса (первый запуск):
+
+$env:PYTHONPATH = "."
+uv run python scripts/ingest.py data/
+Проверка RAG:
+
+Invoke-RestMethod -Method POST -Uri http://localhost:8000/rag/query `
+  -ContentType "application/json" `
+  -Body '{"question": "Кто является концедентом по вологодской концессии?"}'
+
 ## Блок 5.4 — Чанкинг и оптимизация качества
 
 Эксперимент с тремя стратегиями чанкинга, retrieval-метриками, Cohere Rerank и подбором гиперпараметров.

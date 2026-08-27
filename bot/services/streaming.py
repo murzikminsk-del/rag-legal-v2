@@ -1,3 +1,4 @@
+import time
 from typing import AsyncIterator
 
 from aiogram.types import Message
@@ -10,7 +11,7 @@ try:
 except ImportError:
     _HAS_TELEGRAMIFY = False
 
-EDIT_EVERY = 30
+DEBOUNCE_MS = 700
 
 
 def _render(text: str) -> tuple[str, str | None]:
@@ -22,22 +23,24 @@ def _render(text: str) -> tuple[str, str | None]:
 async def stream_to_chat(
     message: Message,
     events: AsyncIterator[dict],
+    placeholder: Message | None = None,
 ) -> str:
     buffer = ""
-    sent = None
-    last_edit_len = 0
-    message_saved = False  # финальный render уже сделан — flush не нужен
+    sent: Message | None = placeholder
+    last_edit_at: float = time.monotonic() if placeholder is not None else 0.0
+    message_saved = False
 
     async for event in events:
         if event["type"] == "token":
             buffer += event["delta"]
+            now = time.monotonic()
             if sent is None:
                 sent = await message.answer(buffer)
-                last_edit_len = len(buffer)
-            elif len(buffer) - last_edit_len >= EDIT_EVERY:
+                last_edit_at = now
+            elif (now - last_edit_at) * 1000 >= DEBOUNCE_MS:
                 try:
                     await sent.edit_text(buffer)
-                    last_edit_len = len(buffer)
+                    last_edit_at = now
                 except Exception:
                     pass
 
@@ -58,8 +61,7 @@ async def stream_to_chat(
                     except Exception:
                         pass
 
-    # flush только если message_saved не пришёл (ошибка на сервере)
-    if not message_saved and sent and buffer and len(buffer) > last_edit_len:
+    if not message_saved and sent and buffer:
         try:
             await sent.edit_text(buffer)
         except Exception:

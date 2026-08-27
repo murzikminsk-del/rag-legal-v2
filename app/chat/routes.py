@@ -1,7 +1,7 @@
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -45,12 +45,12 @@ async def create_chat(
 @router.post("/{chat_id}/messages")
 async def send_message(
     chat_id: UUID,
+    request: Request,
     content: str = Form(...),
     media: UploadFile | None = File(None),
     service: ChatService = Depends(get_chat_service),
     llm=Depends(get_openai),
 ) -> StreamingResponse:
-    # check_input здесь — до StreamingResponse, HTTPException обработается нормально
     await service.check_input(content)
 
     media_part: dict | None = None
@@ -65,9 +65,21 @@ async def send_message(
             "part": media_part,
         }
 
+    rag_context: str | None = None
+    rag = getattr(request.app.state, "rag", None)
+    if rag is not None:
+        try:
+            history = await service._repo.list_messages(chat_id, limit=6)
+            chat_history = [{"role": m.role, "content": m.content} for m in history] or None
+            rag_context = rag.retrieve_context(content, chat_history=chat_history)
+        except Exception:
+            pass
+
     async def generator():
         async for event in service.send_message(
-            chat_id, content, media_part=media_part, media_meta=media_meta
+            chat_id, content,
+            media_part=media_part, media_meta=media_meta,
+            rag_context=rag_context,
         ):
             yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
         yield f"data: {json.dumps({'type': 'done'})}\n\n"

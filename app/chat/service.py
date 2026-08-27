@@ -100,6 +100,7 @@ class ChatService:
         user_content: str,
         media_part: dict | None = None,
         media_meta: dict | None = None,
+        rag_context: str | None = None
     ) -> AsyncIterator[dict]:
         user_msg = ChatMessage(
             chat_id=chat_id,
@@ -112,7 +113,7 @@ class ChatService:
         chat = await self._repo.get_chat(chat_id)
         history = await self._repo.list_messages(chat_id, limit=200)
 
-        messages = await self._build_context(chat, history, current_media_part=media_part)
+        messages = await self._build_context(chat, history, current_media_part=media_part, rag_context=rag_context)
 
         budget = CONTEXT_WINDOW - RESPONSE_TOKENS - SAFETY_MARGIN
         messages = fit_to_budget(messages, budget)
@@ -149,11 +150,23 @@ class ChatService:
     async def _build_context(
         self, chat: Chat | None, history: list[ChatMessage],
         current_media_part: dict | None = None,
+        rag_context: str | None = None,
     ) -> list[dict]:
         messages: list[dict] = []
 
         if chat and chat.system_prompt:
             messages.append({"role": "system", "content": chat.system_prompt})
+
+        if rag_context:
+            messages.append({
+                "role": "system",
+                "content": (
+                    "Используй ТОЛЬКО следующий контекст из базы знаний для ответа. "
+                    "Ссылайся на источники в формате [1], [2]. "
+                    "Если ответ не найден в контексте — так и скажи.\n\n"
+                    f"Контекст:\n{rag_context}"
+                ),
+            })
 
         if len(history) <= KEEP_RECENT:
             for msg in history:

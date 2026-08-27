@@ -14,8 +14,9 @@ async def handle_text(message: Message, backend: BackendClient, state: FSMContex
         return
     try:
         chat_id = await backend.get_or_create_chat(str(message.chat.id), "telegram")
+        placeholder = await message.answer("⏳ Думаю...")
         events = backend.send_message(chat_id, message.text)
-        await stream_to_chat(message, events)
+        await stream_to_chat(message, events, placeholder=placeholder)
     except BackendError as e:
         await message.answer(str(e))
     except Exception:
