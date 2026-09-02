@@ -204,6 +204,50 @@ class RAGService:
         }
 
 
+    def evaluate_inputs(self, question: str) -> dict:
+        """Для eval-пайплайна: возвращает answer + полный список retrieved_contexts."""
+        if self._index is None:
+            raise RuntimeError("RAGService не инициализирован — вызови build() сначала")
+
+        retriever = self._index.as_retriever(similarity_top_k=self._top_k)
+        nodes = retriever.retrieve(question)
+
+        if self._use_reranker and nodes:
+            try:
+                from app.services.reranker import rerank
+                texts = [n.text for n in nodes]
+                sources_list = [n.metadata.get("source", "") for n in nodes]
+                ranked = rerank(question, texts, sources_list, top_n=5)
+                idx_map = {n.text: n for n in nodes}
+                reranked_nodes = []
+                for r in ranked:
+                    node = idx_map.get(r.text)
+                    if node:
+                        node.score = r.relevance_score
+                        reranked_nodes.append(node)
+                nodes = reranked_nodes if reranked_nodes else nodes[:5]
+            except Exception:
+                nodes = nodes[:5]
+        else:
+            nodes = nodes[:5]
+
+        retrieved_contexts = [n.text for n in nodes]  # полный текст, не обрезанный
+
+        top_score = nodes[0].score if nodes else 0.0
+        if top_score < self._threshold:
+            return {
+                "answer": "По базе не нашёл, могу эскалировать.",
+                "retrieved_contexts": retrieved_contexts,
+            }
+
+        prompt = _build_prompt(question, nodes)
+        answer_text = str(Settings.llm.complete(prompt))
+        return {
+            "answer": answer_text,
+            "retrieved_contexts": retrieved_contexts,
+        }
+
+
 _rag_service: RAGService | None = None
 
 

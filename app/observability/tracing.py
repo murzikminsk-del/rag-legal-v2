@@ -9,3 +9,8 @@ def setup_tracing(project_name: str = "diploma-fastapi") -> None:
     endpoint = f"{base.rstrip('/')}/v1/traces"
     tracer_provider = register(project_name=project_name, endpoint=endpoint)
     OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)
+    try:
+        from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
+        LlamaIndexInstrumentor().instrument(tracer_provider=tracer_provider)
+    except Exception:
+        pass  # версия несовместима с llama-index 0.14 — трейсим через OpenAI
