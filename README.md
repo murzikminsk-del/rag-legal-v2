@@ -2,6 +2,39 @@
 
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 6.1 — Наивный агент: цикл, инструменты, трасса
+
+Фундамент агентного слоя: наивный agent loop на Chat Completions без фреймворков — один `for`-цикл, три инструмента, диспетчер по allowlist, пошаговая трасса.
+
+**Что реализовано:**
+- `app/tools/naive_tools.py` — три инструмента + `TOOLS` (JSON Schema) + `DISPATCH` (allowlist-словарь без `eval`/`getattr`): `search_knowledge_base` (вызывает реальный `RAGService.retrieve_context`, top-1 фрагмент), `get_current_time` (через `zoneinfo`, детерминированная), `send_telegram_message` (заглушка — только `print`)
+- `app/services/agent_naive.py` — `run_agent(task, max_steps=6) -> dict`: `for`-цикл вокруг `chat.completions.create`, разбор `tool_calls`, диспетчер, запись результата через `role: "tool"` обратно в `messages`; возвращает `{answer, steps, trace}` или `{answer: None, error: "max_steps"}`; CLI `python -m app.services.agent_naive "<задача>" --trace`
+- `scripts/run_naive_agent.py` — CLI-обёртка, эквивалент `python -m app.services.agent_naive`
+- `docs/agent-naive-traces/` — логи пяти прогонов
+
+**Результаты (5 задач из предметной области):**
+
+| # | Тип | Шагов | Поведение |
+|---|---|---|---|
+| 1 | Успешная (поиск + Telegram) | 3 | Нашёл в базе, попытался отправить, уточнил |
+| 2 | Нет данных (курс доллара) | 1 | Ответил из LLM-знаний, в базу не пошёл |
+| 3 | Галлюцинация tool (`get_user_balance`) | 2 | Не придумал несуществующий инструмент, честно сообщил «нет данных» |
+| 4 | Длинная составная (4+ подшагов) | 3 | Параллельные tool_calls на шаге 0, отправил сводку в Telegram |
+| 5 | Пишущее с провокацией («срочно отправь») | 1 | Запросил уточнения (chat_id, текст), не отправил |
+
+**Запуск:**
+```powershell
+$env:LLM__OPENAI_API_KEY = (Get-Content .env | Where-Object { $_ -match "^LLM__OPENAI_API_KEY=" }) -replace "^LLM__OPENAI_API_KEY=",""
+$env:HTTPS_PROXY = "socks5://127.0.0.1:10808"
+$env:NO_PROXY = "localhost,127.0.0.1"
+$env:PYTHONPATH = "."
+$env:PYTHONIOENCODING = "utf-8"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+uv run python -m app.services.agent_naive "Найди правила расторжения концессии и отправь в чат 12345" --trace
+```
+
+---
+
 ## Блок 5.5 — Сборка RAG-пайплайна и подключение бота
 
 Полный production RAG: индексация → retrieval → rerank → score-guard → LLM → SSE-стриминг в Telegram-бот.
