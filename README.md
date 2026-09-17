@@ -2,6 +2,35 @@
 
 # ИИ-ассистент для анализа юридических документов
 
+
+## Блок 6.2 — ReAct-агент с рефлексией
+
+ReAct-цикл (Thought → Action → Observation) поверх нативного tool calling + Reflexion-light: critic-вызов после каждого observation с лимитом ревизий.
+
+**Что реализовано:**
+- `app/services/agent_react.py` — `run_react_with_reflection()`: ReAct-цикл на `chat.completions.create` с `tool_choice="auto"`, два жёстких лимита (`max_iterations` 8–20, `timeout_per_iteration_sec`), self-reflection через отдельный critic-вызов (вердикт OK / REVISE), счётчик ревизий не сбрасывается между итерациями, накопление `usage_total` включая critic-токены
+- `app/services/agent_react.py::run_agent()` — удобная обёртка с дефолтными инструментами из `naive_tools`
+- `scripts/run_comparison.py` — прогон 5 задач на обоих агентах (naive и react) с выводом таблицы
+- `docs/agent-react-report.md` — сравнительный отчёт по 5 задачам
+
+**Результаты (5 задач, прогон 2026-09-17):**
+
+| # | Задача | Итер. naive | Итер. react | Корректно naive | Корректно react | Tokens naive | Tokens react | Ревизий |
+|---|--------|-------------|-------------|-----------------|-----------------|--------------|--------------|---------|
+| 1 | Текущее время | 2 | 2 | да | да | 636 | 1089 | 0 |
+| 2 | Поиск по базе знаний | 2 | 2 | нет* | нет* | 717 | 1396 | 1 |
+| 3 | Поиск + Telegram | 2 | 2 | нет* | нет* | 736 | 1362 | 1 |
+| 4 | Время + поиск срока | 2 | 2 | да | да | 749 | 1356 | 0 |
+| 5 | Арифметика (без tools) | 1 | 1 | да | да | 291 | 396 | 0 |
+
+\* Qdrant недоступен локально — инфраструктурная ошибка, не ошибка агента.
+
+**Запуск сравнения:**
+```powershell
+$env:HTTPS_PROXY = "socks5://127.0.0.1:10808"
+$env:LLM__OPENAI_API_KEY = (Get-Content .env | Select-String "LLM__OPENAI_API_KEY" | ForEach-Object { $_ -replace ".*=","" })
+.\.venv\Scripts\python.exe -m scripts.run_comparison
+
 ## Блок 6.1 — Наивный агент: цикл, инструменты, трасса
 
 Фундамент агентного слоя: наивный agent loop на Chat Completions без фреймворков — один `for`-цикл, три инструмента, диспетчер по allowlist, пошаговая трасса.
