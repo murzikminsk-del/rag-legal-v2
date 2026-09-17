@@ -2,6 +2,32 @@
 
 # ИИ-ассистент для анализа юридических документов
 
+## Блок 6.3 — LangGraph-агент
+
+ReAct-агент из Б6.2 переписан на LangGraph 1.0: явный `StateGraph`, типизированный `AgentState`, три узла, детерминированный router с лимитом итераций. Два варианта сборки: кастомный граф руками и prebuilt через `create_agent`.
+
+**Что реализовано:**
+- `app/services/agent_graph.py` — `AgentState` (messages+add_messages, iteration_count, tool_results+operator.add), три async-узла (`call_model`, `execute_tool`, `force_finish`), router `route_after_model` с stop-краном `iteration_count >= 6`, `custom_graph` и `prebuilt_graph`
+- `scripts/visualize_graph.py` — `draw_mermaid()` → `docs/agent-graph-custom.mmd` и `docs/agent-graph-prebuilt.mmd`
+- `scripts/bench_agents.py` — 5 задач × 3 реализации (naive/custom/prebuilt) × 3 прогона, результат в `docs/agent-graph-report.md`
+- `docs/agent-graph-report.md` — конфигурация, state contract, router-логика, Mermaid-схема, таблица бенчмарка, сравнение custom vs prebuilt, баг при отладке, блокеры персистентности
+
+**Результаты бенчмарка (avg 3 прогона, 2026-09-17):**
+
+| # | Задача | naive ms | custom ms | prebuilt ms | custom tok | prebuilt tok |
+|---|--------|----------|-----------|-------------|------------|--------------|
+| 1 | time | 3192 | 2326 | 2194 | 500 | 619 |
+| 2 | search | 10830 | 4183 | 4024 | 566 | 710 |
+| 3 | chain | 5178 | 12012* | 4480 | 616 | 819 |
+| 4 | time+search | 3170 | 2397 | 2350 | 619 | 739 |
+| 5 | no-tool | 1759 | 1164 | 921 | 221 | 285 |
+
+\* cold start Qdrant в первом прогоне
+
+**Запуск:**
+```powershell
+C:\Users\ezosina\.local\bin\uv.exe run python -m scripts.bench_agents
+C:\Users\ezosina\.local\bin\uv.exe run python -m scripts.visualize_graph
 
 ## Блок 6.2 — ReAct-агент с рефлексией
 
