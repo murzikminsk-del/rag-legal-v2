@@ -51,6 +51,7 @@ dependencies = [
     "aiosqlite>=0.17.0",
     "psycopg[binary,pool]>=3.2",
     "langgraph-supervisor>=0.0.15",
+    "pdfplumber>=0.11.10",
 ]
 
 [project.optional-dependencies]

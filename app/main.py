@@ -2,6 +2,8 @@ import logging
 import secrets
 import time
 import uuid
+import asyncio
+
 from contextlib import AsyncExitStack, asynccontextmanager
 
 import httpx
@@ -63,7 +65,7 @@ async def lifespan(app: FastAPI):
     try:
         from langchain_openai import ChatOpenAI
 
-        from app.agents.tools import build_search_knowledge_base, multiply
+        from app.agents.tools import build_search_knowledge_base, build_summarize_document, build_legal_opinion, format_claim, multiply
         from app.services.agent_persistent import agent_lifespan
 
         agent_model = ChatOpenAI(
@@ -81,7 +83,10 @@ async def lifespan(app: FastAPI):
         async def _send_email(draft: dict) -> None:
             logger.info("send_email", to=draft.get("to"), subject=draft.get("subject"))
 
-        agent_tools = [multiply, build_search_knowledge_base(_search_kb)]
+        
+
+        agent_tools = [multiply, build_search_knowledge_base(_search_kb), build_summarize_document(agent_model), build_legal_opinion(agent_model), format_claim]   
+        
         app.state.agent_graph = await agent_stack.enter_async_context(
             agent_lifespan(
                 settings.agent_checkpointer,
