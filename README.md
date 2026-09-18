@@ -5,11 +5,15 @@
 Исследование мультиагентной архитектуры: supervisor → researcher + writer на `langgraph_supervisor`. Сравнительный бенчмарк с single-agent baseline, обоснованное решение о применении в дипломе.
 
 **Что реализовано:**
-- `experiments/multi_agent_langgraph.py` — supervisor-граф: researcher (RAG-поиск) + writer (цитирование), mock-fallback при недоступном Qdrant, стриминг через `astream(stream_mode="updates")`, метрики (токены, LLM-вызовы, latency, handoff_count)
-- `experiments/single_agent_baseline.py` — один агент с теми же инструментами через `create_agent` + `ainvoke`
-- `experiments/results.json` — 10 записей (5 вопросов × 2 impl), partition-replace: каждый скрипт перезаписывает только свою часть
-- `docs/multi-agent-report.md` — полный сравнительный отчёт: сценарий, 5 тестовых вопросов, таблица метрик, сравнение с Anthropic benchmark, обоснованное решение
-- `docs/architecture-multi-agent.md` — Mermaid-диаграмма (генерируется `multi_agent_langgraph.py` через `get_graph(xray=True).draw_mermaid()`)
+- `app/agents/supervisor.py` — `build_supervisor(model, search_fn)`: researcher (RAG) + writer (цитирование) через `create_supervisor`; собирается в `lifespan` отдельной веткой — сбой не роняет одиночного агента
+- `app/routers/agent.py` — `POST /agent/research` принимает `{"question": "..."}`, возвращает `{"answer": "..."}` с цитированием `[1][2]`
+- `app/deps/providers.py` — `SupervisorDep`, `get_supervisor`
+- `scripts/multi_agent_demo.py` — live-демо потока supervisor → researcher → writer (mock-поиск, без Qdrant)
+- `experiments/multi_agent_langgraph.py` — supervisor-граф для бенчмарка: метрики (токены, LLM-вызовы, latency, handoff_count)
+- `experiments/single_agent_baseline.py` — baseline с теми же инструментами через `create_agent` + `ainvoke`
+- `experiments/results.json` — 10 записей (5 вопросов × 2 impl)
+- `docs/multi-agent-report.md` — сравнительный отчёт: сценарий, 5 тестовых вопросов, таблица метрик, сравнение с Anthropic benchmark, обоснованное решение
+- `docs/architecture-multi-agent.md` — Mermaid-диаграмма (auto-generated)
 - `tests/test_supervisor.py` — 3 теста: граф собирается, узлы researcher/writer присутствуют, граф возвращает непустой ответ
 
 **Результаты бенчмарка (5 вопросов, 2026-09-18):**
@@ -21,11 +25,23 @@
 | Latency (avg, мс) | 3 195 | 8 597 | +2.7× |
 | Handoff-вызовов | 0 | 2.0 | — |
 
-**Решение:** мультиагент в дипломе **не используется** — втрое больше токенов, вдвое медленнее, галлюцинация на out-of-corpus вопросах, нет прироста качества для write-heavy задачи с единым корпусом.
+**Решение:** в основной диалог мультиагент **не встроен** — втрое больше токенов, вдвое медленнее, галлюцинация на out-of-corpus вопросах. Доступен как отдельный эндпоинт `/agent/research` для задач, где нужна развёрнутая аналитика с цитированием.
 
-**Запуск экспериментов:**
+**Проверка эндпоинта:**
+```powershell
+Invoke-RestMethod -Method POST -Uri http://localhost:8000/agent/research `
+  -ContentType "application/json" `
+  -Body '{"question":"Каков порядок расторжения концессии?"}'
+```
+
+**Live-демо (без сервера):**
 ```powershell
 $env:LLM__OPENAI_API_KEY = (Get-Content .env | Where-Object { $_ -match "^LLM__OPENAI_API_KEY=" } | ForEach-Object { ($_ -split "=", 2)[1] })
+uv run python -m scripts.multi_agent_demo
+```
+
+**Запуск бенчмарка:**
+```powershell
 uv run python experiments/single_agent_baseline.py
 uv run python experiments/multi_agent_langgraph.py
 ```
