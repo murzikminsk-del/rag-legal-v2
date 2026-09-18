@@ -27,7 +27,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.readers.file import (
     PyMuPDFReader,
-    DocxReader,
+    
     HTMLTagReader,
     MarkdownReader,
 )
@@ -35,6 +35,43 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 
 from app.core.config import get_settings
+
+from llama_index.core.readers.base import BaseReader
+from llama_index.core import Document
+
+
+class DocxWithTablesReader(BaseReader):
+    """Читает DOCX включая таблицы через python-docx."""
+
+    def load_data(self, file, extra_info=None):
+        from docx import Document as DocxDocument
+        doc = DocxDocument(file)
+        parts = []
+        for block in doc.element.body:
+            tag = block.tag.split("}")[-1]
+            if tag == "p":
+                from docx.oxml.ns import qn
+                para_text = "".join(
+                    node.text or ""
+                    for node in block.iter()
+                    if node.tag in (qn("w:t"),)
+                )
+                if para_text.strip():
+                    parts.append(para_text.strip())
+            elif tag == "tbl":
+                from docx.table import Table
+                from docx.oxml.ns import qn
+                rows = block.findall(".//" + "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr")
+                for row in rows:
+                    cells = row.findall(".//" + "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc")
+                    row_text = " | ".join(
+                        "".join(t.text or "" for t in cell.iter() if t.tag.endswith("}t"))
+                        for cell in cells
+                    )
+                    if row_text.strip():
+                        parts.append(row_text.strip())
+        text = "\n".join(parts)
+        return [Document(text=text, extra_info=extra_info or {})]
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -44,7 +81,7 @@ COLLECTION = "rag_legal_v2"
 
 FILE_EXTRACTOR = {
     ".pdf":  PyMuPDFReader(),
-    ".docx": DocxReader(),
+    ".docx": DocxWithTablesReader(),
     ".html": HTMLTagReader(),
     ".htm":  HTMLTagReader(),
     ".md":   MarkdownReader(),

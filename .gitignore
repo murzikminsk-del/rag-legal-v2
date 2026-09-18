@@ -18,3 +18,13 @@ __pycache__/
 черновик.py
 
 .cache/
+
+# Тестовые запросы
+body.json
+body_pg.json
+msg.json
+msg2.json
+notify.json
+
+# Runtime данные
+var/

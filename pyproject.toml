@@ -52,6 +52,7 @@ dependencies = [
     "psycopg[binary,pool]>=3.2",
     "langgraph-supervisor>=0.0.15",
     "pdfplumber>=0.11.10",
+    "docx2txt>=0.9",
 ]
 
 [project.optional-dependencies]
