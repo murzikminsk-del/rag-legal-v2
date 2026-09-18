@@ -28,8 +28,14 @@ def get_agent_graph(request: Request) -> Any:
     None — если сборка не удалась: /agent/* вернут 503."""
     return request.app.state.agent_graph
 
+def get_supervisor(request: Request) -> Any:
+    """Supervisor-граф (researcher + writer), собранный в lifespan.
+    None — если сборка не удалась: /agent/research отдаёт 503."""
+    return request.app.state.supervisor
+
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 CacheDep = Annotated[object, Depends(get_cache)]
 LLMServiceDep = Annotated[LLMService, Depends(get_llm_service)]
 AgentGraphDep = Annotated[Any, Depends(get_agent_graph)]
+SupervisorDep = Annotated[Any, Depends(get_supervisor)]

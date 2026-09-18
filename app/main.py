@@ -93,6 +93,22 @@ async def lifespan(app: FastAPI):
             )
         )
         logger.info("agent_ready", backend=settings.agent_checkpointer)
+
+        # Supervisor: researcher + writer — отдельная ветка, сбой не роняет агент.
+        app.state.supervisor = None
+        try:
+            from app.agents.supervisor import build_supervisor
+
+            async def _search_kb_for_supervisor(query: str) -> dict:
+                if app.state.rag is None:
+                    return {"answer": "База знаний недоступна.", "sources": [], "confident": False}
+                return await asyncio.to_thread(app.state.rag.answer, query)
+
+            app.state.supervisor = build_supervisor(agent_model, _search_kb_for_supervisor)
+            logger.info("supervisor_ready")
+        except Exception as e:
+            logger.warning("supervisor_init_failed", error=str(e))
+
     except Exception as e:
         app.state.agent_graph = None
         logger.warning("agent_init_failed", error=str(e))
