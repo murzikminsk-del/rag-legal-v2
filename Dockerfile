@@ -12,7 +12,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
+    uv sync --frozen --no-install-project --no-dev --extra tracing
 
 COPY app/ ./app/
 COPY bot/ ./bot/
@@ -21,7 +21,7 @@ COPY alembic/ ./alembic/
 COPY moderation_keywords.yaml ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --extra tracing
 
 
 FROM python:3.13-slim-bookworm

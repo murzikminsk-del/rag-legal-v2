@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, Request
 from openai import AsyncOpenAI
@@ -23,6 +23,13 @@ def get_llm_service(
     return LLMService(client=client, cache=cache, settings=settings)
 
 
+def get_agent_graph(request: Request) -> Any:
+    """Скомпилированный ReAct-граф агента, собранный в lifespan.
+    None — если сборка не удалась: /agent/* вернут 503."""
+    return request.app.state.agent_graph
+
+
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 CacheDep = Annotated[object, Depends(get_cache)]
 LLMServiceDep = Annotated[LLMService, Depends(get_llm_service)]
+AgentGraphDep = Annotated[Any, Depends(get_agent_graph)]

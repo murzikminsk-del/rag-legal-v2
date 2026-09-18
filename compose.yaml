@@ -16,6 +16,7 @@ services:
       INTERNAL_TOKEN: ${INTERNAL_TOKEN}
       NO_PROXY: "qdrant,localhost,127.0.0.1"
       QDRANT_URL: http://qdrant:6333
+      AGENT_CHECKPOINTER: postgres
     depends_on:
       redis:
         condition: service_healthy

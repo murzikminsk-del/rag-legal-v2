@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     qdrant_collection: str = "documents"
     embedding_dim: int = 1536
     
-    rag_collection: str = "rag_block_03"
+    rag_collection: str = "rag_legal_v2"
     rag_baremetal_collection: str = "rag_block_03_baremetal"
     rag_corpus_dir: Path = Path("data/rag-block-03")
     chunk_size: int = 512
@@ -58,7 +58,11 @@ class Settings(BaseSettings):
     similarity_top_k: int = 10
     rag_score_threshold: float = 0.3
     cohere_api_key: str | None = None
-
+    rag_data_dir: Path = Path("data")
+    eval_judge_model: str = "claude-haiku-4-5-20251001"
+    anthropic_api_key: SecretStr | None = None
+    agent_checkpointer: Literal["memory", "sqlite", "postgres"] = "sqlite"
+    agent_sqlite_path: str = "var/agent_checkpoints.sqlite"
 
 @lru_cache
 def get_settings() -> Settings:

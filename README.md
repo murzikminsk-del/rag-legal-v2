@@ -1,6 +1,88 @@
 # ИИ-ассистент для анализа юридических документов
 
-# ИИ-ассистент для анализа юридических документов
+## Блок 6.5 — Мультиагентные системы
+
+Исследование мультиагентной архитектуры: supervisor → researcher + writer на `langgraph_supervisor`. Сравнительный бенчмарк с single-agent baseline, обоснованное решение о применении в дипломе.
+
+**Что реализовано:**
+- `experiments/multi_agent_langgraph.py` — supervisor-граф: researcher (RAG-поиск) + writer (цитирование), mock-fallback при недоступном Qdrant, стриминг через `astream(stream_mode="updates")`, метрики (токены, LLM-вызовы, latency, handoff_count)
+- `experiments/single_agent_baseline.py` — один агент с теми же инструментами через `create_agent` + `ainvoke`
+- `experiments/results.json` — 10 записей (5 вопросов × 2 impl), partition-replace: каждый скрипт перезаписывает только свою часть
+- `docs/multi-agent-report.md` — полный сравнительный отчёт: сценарий, 5 тестовых вопросов, таблица метрик, сравнение с Anthropic benchmark, обоснованное решение
+- `docs/architecture-multi-agent.md` — Mermaid-диаграмма (генерируется `multi_agent_langgraph.py` через `get_graph(xray=True).draw_mermaid()`)
+- `tests/test_supervisor.py` — 3 теста: граф собирается, узлы researcher/writer присутствуют, граф возвращает непустой ответ
+
+**Результаты бенчмарка (5 вопросов, 2026-09-18):**
+
+| Метрика | Single-agent | Multi-agent | Разница |
+|---------|-------------|-------------|---------|
+| Токены (avg) | 700 | 2 185 | +3.1× |
+| LLM-вызовы (avg) | 2.2 | 7.0 | +3.2× |
+| Latency (avg, мс) | 3 195 | 8 597 | +2.7× |
+| Handoff-вызовов | 0 | 2.0 | — |
+
+**Решение:** мультиагент в дипломе **не используется** — втрое больше токенов, вдвое медленнее, галлюцинация на out-of-corpus вопросах, нет прироста качества для write-heavy задачи с единым корпусом.
+
+**Запуск экспериментов:**
+```powershell
+$env:LLM__OPENAI_API_KEY = (Get-Content .env | Where-Object { $_ -match "^LLM__OPENAI_API_KEY=" } | ForEach-Object { ($_ -split "=", 2)[1] })
+uv run python experiments/single_agent_baseline.py
+uv run python experiments/multi_agent_langgraph.py
+```
+
+**Тесты:**
+```powershell
+uv run pytest tests/test_supervisor.py -v
+# 3 passed
+```
+
+---
+
+## Блок 6.4 — LangGraph: продвинутые паттерны
+
+Персистентный ReAct-агент с Human-in-the-Loop: граф останавливается перед опасным действием (`send_email`), клиент подтверждает или отклоняет, time travel по чекпоинтам.
+
+**Что реализовано:**
+- `app/services/agent_persistent.py` — `build_agent(saver, model, tools, send_fn)` + `agent_lifespan()`: `AgentState` с полями `draft`, `sent`, `tool_results`, `iteration_count`; узлы `call_model → execute_tool / prepare_email → confirm_and_send`; `interrupt()` в `confirm_and_send`; permission policy через `user_role` в configurable
+- `app/agents/tools.py` — `multiply`, `build_search_knowledge_base(rag_fn)`, `send_email` (опасный, идёт в HIL-ветку)
+- `app/routers/agent.py` — три эндпоинта:
+  - `POST /agent/chat` — один шаг; при interrupt возвращает `status="interrupted"` с preview письма
+  - `POST /agent/resume` — возобновление с `Command(resume=True/False)`
+  - `POST /agent/stream` — SSE-поток событий `update/interrupt/token/done`
+- `scripts/time_travel_demo.py` — демо: interrupt, две ветки (отказ / одобрение), `aget_state_history`, replay через разные `thread_id`
+- `tests/test_agent_persistent.py` — 4 теста: interrupt перед отправкой, resume=True отправляет, resume=False не отправляет, роль `full` пропускает HIL
+- `docs/agent-persistent-report.md` — выбор чекпоинтера (SQLite/Postgres), схема HIL, time travel, примеры SSE, permission policy
+
+**Чекпоинтер:** SQLite локально (`AGENT_CHECKPOINTER=sqlite`, файл `var/agent_checkpoints.sqlite`); в docker-compose — Postgres (`AGENT_CHECKPOINTER=postgres`).
+
+**Запуск демо:**
+```powershell
+$env:LLM__OPENAI_API_KEY = (Get-Content .env | Where-Object { $_ -match "^LLM__OPENAI_API_KEY=" } | ForEach-Object { ($_ -split "=", 2)[1] })
+uv run python scripts/time_travel_demo.py
+```
+
+**Проверка через HTTP:**
+```powershell
+# Шаг 1: отправить задание — агент дойдёт до interrupt
+Invoke-RestMethod -Method POST -Uri http://localhost:8000/agent/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"отправь письмо клиенту о договоре №42","thread_id":"demo-1"}'
+# → status="interrupted", interrupt.preview содержит черновик письма
+
+# Шаг 2: подтвердить отправку
+Invoke-RestMethod -Method POST -Uri http://localhost:8000/agent/resume `
+  -ContentType "application/json" `
+  -Body '{"thread_id":"demo-1","decision":true}'
+# → status="done", sent=true
+```
+
+**Тесты:**
+```powershell
+uv run pytest tests/test_agent_persistent.py -v
+# 4 passed
+```
+
+---
 
 ## Блок 6.3 — LangGraph-агент
 

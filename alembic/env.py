@@ -16,17 +16,41 @@ if db_url := os.getenv("DATABASE_URL"):
 
 target_metadata = Base.metadata
 
+# LangGraph-чекпоинтер ведёт свои таблицы через setup() — без SQLAlchemy-моделей.
+# Исключаем из autogenerate, иначе Alembic предложит их DROP.
+_CHECKPOINT_TABLES = {
+    "checkpoints",
+    "checkpoint_writes",
+    "checkpoint_blobs",
+    "checkpoint_migrations",
+}
+
+
+def include_name(name: str | None, type_: str, parent_names: dict) -> bool:
+    if type_ == "table" and name in _CHECKPOINT_TABLES:
+        return False
+    return True
+
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(url=url, target_metadata=target_metadata,
-                      literal_binds=True, dialect_opts={"paramstyle": "named"})
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+        include_name=include_name,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_name=include_name,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
@@ -42,5 +66,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     asyncio.run(run_migrations_online())
-    
-    

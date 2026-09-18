@@ -1,7 +1,8 @@
+import logging
 import secrets
 import time
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 
 import httpx
 import redis.asyncio as aioredis
@@ -18,13 +19,12 @@ from app.core.exceptions import LLMError, LLMRateLimitError, LLMTimeoutError
 from app.observability.logging import setup_logging
 from app.observability.tracing import setup_tracing
 from app.routers import chat, health, models
-
+from app.routers.agent import router as agent_router
 from app.chat.routes import router as chat_history_router
 from app.admin.routes import router as admin_router
 from app.chat.feedback import router as feedback_router
 from app.moderation.service import ModerationService
 from app.services.vector_store import get_vector_store
-
 from app.routers.rag import router as rag_router
 from app.services.rag import get_rag_service
 
@@ -35,7 +35,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging(settings.log_level)
-    setup_tracing()
+    setup_tracing(settings)
     app.state.openai = AsyncOpenAI(
         api_key=settings.llm.openai_api_key.get_secret_value(),
         timeout=settings.llm.request_timeout,
@@ -46,19 +46,63 @@ async def lifespan(app: FastAPI):
         llm=app.state.openai,
         keywords_path=settings.moderation_keywords_path,
         use_openai=settings.use_openai_moderation,
-    )    
-    
+    )
+
     vector_store = get_vector_store()
     await vector_store.ensure_collection()
-    app.state.vector_store = vector_store 
-    
+    app.state.vector_store = vector_store
+
     rag_service = get_rag_service()
     rag_service.build()
-    app.state.rag = rag_service   
-    
+    app.state.rag = rag_service
+
+    # Агентный слой: персистентный ReAct-граф с HIL.
+    # AsyncExitStack держит чекпоинтер открытым всё время работы приложения.
+    app.state.agent_graph = None
+    agent_stack = AsyncExitStack()
+    try:
+        from langchain_openai import ChatOpenAI
+
+        from app.agents.tools import build_search_knowledge_base, multiply
+        from app.services.agent_persistent import agent_lifespan
+
+        agent_model = ChatOpenAI(
+            model=settings.llm.default_model,
+            temperature=0,
+            api_key=settings.llm.openai_api_key.get_secret_value(),
+            http_async_client=httpx.AsyncClient(trust_env=False),
+        )
+
+        async def _search_kb(query: str) -> dict:
+            if app.state.rag is None:
+                return {"answer": "База знаний недоступна.", "sources": [], "confident": False}
+            return await asyncio.to_thread(app.state.rag.answer, query)
+
+        async def _send_email(draft: dict) -> None:
+            logger.info("send_email", to=draft.get("to"), subject=draft.get("subject"))
+
+        agent_tools = [multiply, build_search_knowledge_base(_search_kb)]
+        app.state.agent_graph = await agent_stack.enter_async_context(
+            agent_lifespan(
+                settings.agent_checkpointer,
+                agent_model,
+                agent_tools,
+                _send_email,
+                sqlite_path=settings.agent_sqlite_path,
+                postgres_url=settings.database_url,
+            )
+        )
+        logger.info("agent_ready", backend=settings.agent_checkpointer)
+    except Exception as e:
+        app.state.agent_graph = None
+        logger.warning("agent_init_failed", error=str(e))
+
     app.state.canary = "CANARY_" + secrets.token_hex(4)
-    logger.info("startup", message="OpenAI and Redis clients initialized")
+    logger.info("startup", message="all services initialized")
+
     yield
+
+    await agent_stack.aclose()
     await app.state.openai.close()
     await app.state.cache.aclose()
     await app.state.vector_store.close()
@@ -137,3 +181,4 @@ app.include_router(chat_history_router)
 app.include_router(admin_router)
 app.include_router(feedback_router)
 app.include_router(rag_router)
+app.include_router(agent_router)

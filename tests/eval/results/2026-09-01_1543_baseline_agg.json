@@ -1,0 +1,9 @@
+{
+  "label": "baseline",
+  "timestamp": "2026-09-01_1543",
+  "faithfulness": 0.7787,
+  "answer_relevancy": 0.4552,
+  "context_precision": 0.9232,
+  "context_recall": 0.7056,
+  "has_citation": 0.9667
+}

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",  # лишние переменные в .env не вызывают ошибку
     )
-
+    
     # SecretStr — специальный тип: значение не печатается в логах случайно
     openai_api_key: SecretStr
 
