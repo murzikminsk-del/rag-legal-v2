@@ -40,36 +40,46 @@ from llama_index.core.readers.base import BaseReader
 from llama_index.core import Document
 
 
+W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
 class DocxWithTablesReader(BaseReader):
-    """Читает DOCX включая таблицы через python-docx."""
+    """Читает DOCX: обычные абзацы и таблицы (построчно, ячейки через ' | ')."""
+
+    @staticmethod
+    def _para_text(p) -> str:
+        """Текст одного абзаца <w:p>; табуляция и перенос строки → пробел."""
+        out = []
+        for node in p.iter(W + "t", W + "tab", W + "br"):
+            if node.tag == W + "t":
+                out.append(node.text or "")
+            else:
+                out.append(" ")
+        return " ".join("".join(out).split())
+
+    def _cell_text(self, cell) -> str:
+        """Текст ячейки: абзацы через перенос строки, а не слитно."""
+        paras = [self._para_text(p) for p in cell.iter(W + "p")]
+        return "\n".join(p for p in paras if p)
 
     def load_data(self, file, extra_info=None):
         from docx import Document as DocxDocument
+
         doc = DocxDocument(file)
         parts = []
         for block in doc.element.body:
-            tag = block.tag.split("}")[-1]
-            if tag == "p":
-                from docx.oxml.ns import qn
-                para_text = "".join(
-                    node.text or ""
-                    for node in block.iter()
-                    if node.tag in (qn("w:t"),)
-                )
-                if para_text.strip():
-                    parts.append(para_text.strip())
-            elif tag == "tbl":
-                from docx.table import Table
-                from docx.oxml.ns import qn
-                rows = block.findall(".//" + "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr")
-                for row in rows:
-                    cells = row.findall(".//" + "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc")
-                    row_text = " | ".join(
-                        "".join(t.text or "" for t in cell.iter() if t.tag.endswith("}t"))
-                        for cell in cells
-                    )
-                    if row_text.strip():
-                        parts.append(row_text.strip())
+            if block.tag == W + "p":
+                text = self._para_text(block)
+                if text:
+                    parts.append(text)
+            elif block.tag == W + "tbl":
+                # только строки и ячейки этого уровня — вложенные таблицы
+                # попадут в текст через cell.iter(p) один раз, без дублей
+                for row in block.findall(W + "tr"):
+                    cells = [self._cell_text(c) for c in row.findall(W + "tc")]
+                    cells = [c for c in cells if c]
+                    if cells:
+                        parts.append(" | ".join(cells))
         text = "\n".join(parts)
         return [Document(text=text, extra_info=extra_info or {})]
 
