@@ -30,13 +30,8 @@ CITATION_INSTRUCTION = (
 
 
 def _format_context(nodes: list) -> str:
-    """Пронумерованный контекст для LLM: [N] договор · файл, затем полный текст чанка."""
-    parts = []
-    for i, node in enumerate(nodes, start=1):
-        meta = node.metadata or {}
-        header = " · ".join(x for x in (meta.get("category"), meta.get("source")) if x)
-        parts.append(f"[{i}] {header}\n{node.text}")
-    return "\n\n---\n\n".join(parts)
+    """Пронумерованный контекст для LLM: [N] и текст чанка (шапка «договор · файл · раздел» уже в нём)."""
+    return "\n\n---\n\n".join(f"[{i}] {node.text}" for i, node in enumerate(nodes, start=1))
 
 
 def _top_score(nodes: list) -> float:

@@ -21,7 +21,7 @@ os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,qdrant")
 
 from llama_index.core import Settings, SimpleDirectoryReader
 from llama_index.core.ingestion import IngestionPipeline, DocstoreStrategy
-from llama_index.core.node_parser import SentenceSplitter
+from app.services.legal_chunker import LegalNodeParser
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.vector_stores.qdrant import QdrantVectorStore
@@ -112,10 +112,14 @@ def _load_documents(data_dir: Path) -> list:
     """Загружает документы, помечает упавшие файлы как .failed."""
     docs = []
     for fpath in sorted(data_dir.rglob("*")):
+
         if not fpath.is_file():
             continue
+        if fpath.name.startswith("~$"):
+            continue  # временный файл открытого в Word документа
         if fpath.suffix.lower() not in FILE_EXTRACTOR:
             continue
+        
         try:
             loaded = SimpleDirectoryReader(
                 input_files=[str(fpath)],
@@ -170,10 +174,7 @@ def main(data_dir: str) -> None:
 
     pipeline = IngestionPipeline(
         transformations=[
-            SentenceSplitter(
-                chunk_size=s.chunk_size,
-                chunk_overlap=s.chunk_overlap,
-            ),
+            LegalNodeParser(),
             Settings.embed_model,
         ],
         vector_store=vector_store,
