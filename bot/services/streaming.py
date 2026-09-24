@@ -67,4 +67,12 @@ async def stream_to_chat(
         except Exception:
             pass
 
+    if not buffer and sent:
+        # бэкенд не прислал ни одного токена (упал или LLM недоступна) —
+        # не оставляем пользователя с вечным «Думаю...»
+        try:
+            await sent.edit_text("Не удалось получить ответ. Попробуйте ещё раз.")
+        except Exception:
+            pass
+    
     return buffer

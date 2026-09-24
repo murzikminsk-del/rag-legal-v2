@@ -148,3 +148,10 @@ async def agent_stream(req: AgentStreamRequest, graph: AgentGraphDep) -> Streami
     return StreamingResponse(event_source(), media_type="text/event-stream")
 
 
+@router.delete("/threads/{thread_id}")
+async def agent_clear(thread_id: str, graph: AgentGraphDep) -> dict:
+    """Удаляет всю историю (чекпоинты) агента по thread_id — для /clear в боте."""
+    if graph is None:
+        raise HTTPException(status_code=503, detail="агентный граф не инициализирован")
+    await graph.checkpointer.adelete_thread(thread_id)
+    return {"status": "ok"}

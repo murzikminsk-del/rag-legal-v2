@@ -10,6 +10,9 @@ from bot.states import AgentFlow
 
 router = Router()
 
+def agent_thread_id(chat_id: int) -> str:
+    """Ключ истории агента для чата Telegram."""
+    return f"agent-tg-{chat_id}"
 
 @router.message(Command("agent"))
 async def cmd_agent(message: Message, backend: BackendClient, state: FSMContext) -> None:

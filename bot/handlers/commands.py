@@ -7,6 +7,8 @@ from aiogram.types import Message
 
 from bot.services.backend_client import BackendClient
 
+from bot.handlers.agent import agent_thread_id
+
 log = logging.getLogger(__name__)
 router = Router()
 
@@ -42,12 +44,15 @@ async def cmd_help(message: Message) -> None:
 
 
 @router.message(Command("clear"))
-async def cmd_clear(message: Message, backend: BackendClient) -> None:
+async def cmd_clear(message: Message, backend: BackendClient, state: FSMContext) -> None:
+    await state.clear()
     try:
         chat_id = await backend.get_or_create_chat(str(message.chat.id), "telegram")
         await backend.clear_messages(chat_id)
-        await message.answer("История очищена. Можете задать новый вопрос.")
+        await backend.agent_clear(agent_thread_id(message.chat.id))
+        await message.answer("История очищена (и чат, и агент). Можете задать новый вопрос.")
     except Exception:
+        log.exception("cmd_clear failed")
         await message.answer("Не удалось очистить историю. Попробуйте позже.")
 
 

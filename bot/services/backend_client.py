@@ -76,6 +76,11 @@ class BackendClient:
     async def clear_messages(self, chat_id: UUID) -> None:
         r = await self._http.delete(f"/chats/{chat_id}/messages")
         r.raise_for_status()
+        
+    async def agent_clear(self, thread_id: str) -> None:
+        """Удаляет историю персистентного агента."""
+        r = await self._http.delete(f"/agent/threads/{thread_id}")
+        r.raise_for_status()
 
     async def aclose(self) -> None:
         await self._http.aclose()
