@@ -26,7 +26,7 @@ from app.chat.routes import router as chat_history_router
 from app.admin.routes import router as admin_router
 from app.chat.feedback import router as feedback_router
 from app.moderation.service import ModerationService
-from app.services.vector_store import get_vector_store
+
 from app.routers.rag import router as rag_router
 from app.services.rag import get_rag_service
 
@@ -50,10 +50,8 @@ async def lifespan(app: FastAPI):
         use_openai=settings.use_openai_moderation,
     )
 
-    vector_store = get_vector_store()
-    await vector_store.ensure_collection()
-    app.state.vector_store = vector_store
-
+    
+    
     rag_service = get_rag_service()
     rag_service.build()
     app.state.rag = rag_service
@@ -113,7 +111,7 @@ async def lifespan(app: FastAPI):
     await agent_stack.aclose()
     await app.state.openai.close()
     await app.state.cache.aclose()
-    await app.state.vector_store.close()
+    
     logger.info("shutdown", message="clients closed")
 
 
