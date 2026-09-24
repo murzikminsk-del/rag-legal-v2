@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AnyMessage, ToolMessage
+from langchain_core.messages import AnyMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool, tool
 from langgraph.checkpoint.memory import InMemorySaver
@@ -24,6 +24,18 @@ from langgraph.types import interrupt
 
 MAX_ITERATIONS = 6
 DANGEROUS_TOOL = "send_email"
+
+AGENT_SYSTEM_PROMPT = (
+    "Ты юридический ассистент по документам компании. "
+    "На любой вопрос о договорах и документах СНАЧАЛА вызывай search_knowledge_base "
+    "и отвечай ТОЛЬКО по найденным фрагментам — не используй общие знания. "
+    "После каждого факта указывай источник в скобках: название документа и номер пункта, "
+    "например: (КС Вологда.docx, п. 6.1); номер пункта — только если он есть во фрагменте. "
+    "Если поиск ничего не нашёл — так и скажи. "
+    "Для претензии сначала найди в базе нужные условия договора, затем вызывай format_claim. "
+    "Письмо отправляй через send_email, только если пользователь прямо попросил отправить. "
+    "Отвечай кратко, без повторов."
+)
 
 SendEmailFn = Callable[[dict], Awaitable[None]]
 
@@ -65,7 +77,9 @@ def build_agent(
     tool_by_name = {t.name: t for t in tools}
 
     async def call_model(state: PersistentAgentState) -> dict:
-        response = await bound_model.ainvoke(state["messages"])
+        response = await bound_model.ainvoke(
+            [SystemMessage(AGENT_SYSTEM_PROMPT), *state["messages"]]
+        )
         return {
             "messages": [response],
             "iteration_count": state["iteration_count"] + 1,

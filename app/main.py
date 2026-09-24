@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
     try:
         from langchain_openai import ChatOpenAI
 
-        from app.agents.tools import build_search_knowledge_base, build_summarize_document, build_legal_opinion, format_claim, multiply
+        from app.agents.tools import build_search_knowledge_base, build_summarize_document, format_claim
         from app.services.agent_persistent import agent_lifespan
 
         agent_model = ChatOpenAI(
@@ -75,17 +75,17 @@ async def lifespan(app: FastAPI):
             http_async_client=httpx.AsyncClient(trust_env=False),
         )
 
-        async def _search_kb(query: str) -> dict:
+        async def _search_kb(query: str) -> str:
             if app.state.rag is None:
-                return {"answer": "База знаний недоступна.", "sources": [], "confident": False}
-            return await asyncio.to_thread(app.state.rag.answer, query)
+                return ""
+            return await asyncio.to_thread(app.state.rag.retrieve_context, query)
 
         async def _send_email(draft: dict) -> None:
             logger.info("send_email", to=draft.get("to"), subject=draft.get("subject"))
 
         
 
-        agent_tools = [multiply, build_search_knowledge_base(_search_kb), build_summarize_document(agent_model), build_legal_opinion(agent_model), format_claim]   
+        agent_tools = [build_search_knowledge_base(_search_kb), build_summarize_document(agent_model), format_claim]
         
         app.state.agent_graph = await agent_stack.enter_async_context(
             agent_lifespan(
