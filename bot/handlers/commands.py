@@ -18,7 +18,7 @@ async def cmd_start(message: Message, backend: BackendClient) -> None:
         await message.answer(
             f"Добрый день! Я юридический ассистент.\n\n"
             "Задайте вопрос напрямую — отвечу на него.\n"
-            "/ask — выбрать тему для запроса\n"
+            
             "/clear — начать диалог заново\n"
             "/help — список команд"
         )
@@ -32,7 +32,7 @@ async def cmd_help(message: Message) -> None:
     await message.answer(
         "Доступные команды:\n\n"
         "/start — начать работу\n"
-        "/ask — задать вопрос по теме (договоры, комплаенс и др.)\n"
+        
         "/clear — очистить историю диалога\n"
         "/cancel — отменить текущий сценарий\n"
         "/help — эта справка\n"
