@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 from app.chat.domain import Chat, ChatMessage
-from app.chat.service import ChatService, KEEP_RECENT
+from app.chat.service import ChatService, KEEP_RECENT, RAG_EMPTY_PROMPT
 
 
 def _make_llm_mock(summary_text: str = "summary") -> MagicMock:
@@ -18,7 +18,7 @@ def _make_llm_mock(summary_text: str = "summary") -> MagicMock:
 
 def make_service(llm=None) -> ChatService:
     repo = AsyncMock()
-    return ChatService(repository=repo, llm=llm or MagicMock())
+    return ChatService(repository=repo, llm=llm or MagicMock(), moderation=AsyncMock())
 
 
 def make_messages(n: int) -> list[ChatMessage]:
@@ -34,7 +34,7 @@ async def test_few_messages_no_summary():
     msgs = make_messages(KEEP_RECENT)
     svc = make_service()
     context = await svc._build_context(chat=None, history=msgs)
-    assert len(context) == KEEP_RECENT
+    assert len([m for m in context if m["role"] != "system"]) == KEEP_RECENT
     assert all(m["role"] in ("user", "assistant", "system") for m in context)
 
 
@@ -76,3 +76,20 @@ async def test_system_prompt_prepended():
     context = await svc._build_context(chat=chat, history=msgs)
     assert context[0]["role"] == "system"
     assert "юридический" in context[0]["content"]
+    
+@pytest.mark.asyncio
+async def test_rag_context_goes_to_system_prompt():
+    svc = make_service()
+    context = await svc._build_context(
+        chat=None, history=make_messages(1), rag_context="[1] П8 · штраф 50 баллов"
+    )
+    system = [m for m in context if m["role"] == "system"]
+    assert len(system) == 1
+    assert "штраф 50 баллов" in system[0]["content"]
+
+
+@pytest.mark.asyncio
+async def test_empty_rag_context_forbids_general_knowledge():
+    svc = make_service()
+    context = await svc._build_context(chat=None, history=make_messages(1), rag_context="")
+    assert context[0]["content"] == RAG_EMPTY_PROMPT

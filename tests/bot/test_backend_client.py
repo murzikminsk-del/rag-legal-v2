@@ -56,7 +56,10 @@ async def test_send_message_parses_json_sse():
     result = []
     async for token in client.send_message(chat_id, "привет"):
         result.append(token)
-    assert result == ["Добрый", " день"]
+    assert result == [
+        {"type": "token", "delta": "Добрый"},
+        {"type": "token", "delta": " день"},
+    ]
 
 
 @pytest.mark.asyncio
@@ -77,5 +80,5 @@ async def test_send_message_with_media_sends_multipart():
     async for token in client.send_message(chat_id, "опиши", media=b"fake", mime="image/jpeg"):
         result.append(token)
 
-    assert result == ["ок"]
+    assert result == [{"type": "token", "delta": "ок"}]
     assert "multipart" in received["content_type"]
