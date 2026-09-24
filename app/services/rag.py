@@ -1,8 +1,9 @@
 import os
 os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1")
 
+import logging
+
 from llama_index.core import Settings, VectorStoreIndex
-from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI as LlamaOpenAI
 from llama_index.vector_stores.qdrant import QdrantVectorStore
@@ -10,11 +11,15 @@ from qdrant_client import QdrantClient
 
 from app.core.config import get_settings
 
+log = logging.getLogger(__name__)
+
 COLLECTION = "rag_legal_v2"
+FINAL_TOP_N = 5  # сколько фрагментов уходит в LLM после реранка
+NOT_FOUND = "По базе не нашёл, могу эскалировать."
 
 SYSTEM_PROMPT = (
     "Ты юридический ассистент. Отвечай ТОЛЬКО на основе предоставленного контекста. "
-    "Если ответа в контексте нет — пиши: «По базе не нашёл, могу эскалировать.» "
+    f"Если ответа в контексте нет — пиши: «{NOT_FOUND}» "
     "Не выдумывай факты."
 )
 
@@ -24,13 +29,22 @@ CITATION_INSTRUCTION = (
 )
 
 
-def _build_prompt(question: str, nodes: list, chat_history: list[dict] | None = None) -> str:
+def _format_context(nodes: list) -> str:
+    """Пронумерованный контекст для LLM: [N] договор · файл, затем полный текст чанка."""
     parts = []
     for i, node in enumerate(nodes, start=1):
-        fname = node.metadata.get("source") or node.metadata.get("file_name") or ""
-        parts.append(f"[{i}] {fname}\n{node.text[:1000]}")
-    context = "\n\n---\n\n".join(parts)
+        meta = node.metadata or {}
+        header = " · ".join(x for x in (meta.get("category"), meta.get("source")) if x)
+        parts.append(f"[{i}] {header}\n{node.text}")
+    return "\n\n---\n\n".join(parts)
 
+
+def _top_score(nodes: list) -> float:
+    """Лучшая косинусная близость среди найденных фрагментов (0.0, если пусто)."""
+    return max((n.score or 0.0 for n in nodes), default=0.0)
+
+
+def _build_prompt(question: str, nodes: list, chat_history: list[dict] | None = None) -> str:
     history_text = ""
     if chat_history:
         lines = []
@@ -41,7 +55,7 @@ def _build_prompt(question: str, nodes: list, chat_history: list[dict] | None = 
 
     return (
         f"{history_text}"
-        f"Контекст:\n\n{context}\n\n"
+        f"Контекст:\n\n{_format_context(nodes)}\n\n"
         f"Вопрос: {question}\n\n"
         f"{CITATION_INSTRUCTION}"
     )
@@ -71,17 +85,12 @@ class RAGService:
         Settings.embed_model = OpenAIEmbedding(
             model=s.embedding_model,
             api_key=s.llm.openai_api_key.get_secret_value(),
-            http_client=None,
         )
         Settings.llm = LlamaOpenAI(
             model=s.llm.default_model,
             api_key=s.llm.openai_api_key.get_secret_value(),
             temperature=0.0,
             system_prompt=SYSTEM_PROMPT,
-        )
-        Settings.node_parser = SentenceSplitter(
-            chunk_size=s.chunk_size,
-            chunk_overlap=s.chunk_overlap,
         )
 
         self._client = QdrantClient(
@@ -93,57 +102,46 @@ class RAGService:
         self._use_reranker: bool = bool(s.cohere_api_key)
 
     def build(self) -> None:
-        vector_store = QdrantVectorStore(
-            client=self._client,
-            collection_name=COLLECTION,
-        )
         existing = {c.name for c in self._client.get_collections().collections}
-        if COLLECTION in existing:
-            self._index = VectorStoreIndex.from_vector_store(vector_store)
-        else:
+        if COLLECTION not in existing:
             raise RuntimeError(
                 f"Коллекция {COLLECTION!r} не найдена. "
                 "Сначала запустите: python scripts/ingest.py data/"
             )
+        vector_store = QdrantVectorStore(client=self._client, collection_name=COLLECTION)
+        self._index = VectorStoreIndex.from_vector_store(vector_store)
 
-    def retrieve_context(self, question: str, chat_history: list[dict] | None = None) -> str:
-        """Только retrieval без LLM: возвращает пронумерованный контекст или ''."""
+    def _require_index(self) -> VectorStoreIndex:
         if self._index is None:
-            return ""
-        retrieval_question = question
-        if chat_history:
-            retrieval_question = self._condense(question, chat_history)
-        retriever = self._index.as_retriever(similarity_top_k=self._top_k)
-        nodes = retriever.retrieve(retrieval_question)
-        if not nodes:
-            return ""
-        if self._use_reranker:
+            raise RuntimeError("RAGService не инициализирован — вызови build() сначала")
+        return self._index
+
+    def _retrieve_nodes(self, query: str) -> list:
+        """Векторный поиск top_k → реранк Cohere (если есть ключ) → FINAL_TOP_N лучших.
+
+        node.score остаётся косинусной близостью из Qdrant, поэтому порог
+        rag_score_threshold всегда сравнивается с одной и той же шкалой.
+        """
+        retriever = self._require_index().as_retriever(similarity_top_k=self._top_k)
+        nodes = retriever.retrieve(query)
+        if self._use_reranker and nodes:
             try:
                 from app.services.reranker import rerank
-                texts = [n.text for n in nodes]
-                sources_list = [n.metadata.get("source", "") for n in nodes]
-                ranked = rerank(retrieval_question, texts, sources_list, top_n=5)
-                idx_map = {n.text: n for n in nodes}
-                reranked = [idx_map[r.text] for r in ranked if r.text in idx_map]
-                nodes = reranked if reranked else nodes[:5]
+                ranked = rerank(
+                    query,
+                    [n.text for n in nodes],
+                    [n.metadata.get("source", "") for n in nodes],
+                    top_n=FINAL_TOP_N,
+                )
+                return [nodes[r.original_index] for r in ranked]
             except Exception:
-                nodes = nodes[:5]
-        else:
-            nodes = nodes[:5]
-        top_score = nodes[0].score if nodes else 0.0
-        if top_score < self._threshold:
-            return ""
-        parts = []
-        for i, node in enumerate(nodes, start=1):
-            fname = node.metadata.get("source") or node.metadata.get("file_name") or ""
-            parts.append(f"[{i}] {fname}\n{node.text[:1000]}")
-        return "\n\n---\n\n".join(parts) 
-    
-    
+                log.exception("rerank_failed")
+        return nodes[:FINAL_TOP_N]
+
     def _condense(self, question: str, chat_history: list[dict]) -> str:
         if len(question.split()) > 6:
             return question
-        lines = [f"{m.get('role','')}: {m.get('content','')}" for m in chat_history[-4:]]
+        lines = [f"{m.get('role', '')}: {m.get('content', '')}" for m in chat_history[-4:]]
         prompt = (
             "История:\n" + "\n".join(lines) +
             f"\n\nТекущий вопрос: {question}\n\n"
@@ -152,99 +150,44 @@ class RAGService:
         )
         return str(Settings.llm.complete(prompt)).strip()
 
-    def answer(self, question: str, chat_history: list[dict] | None = None) -> dict:
+    def retrieve_context(self, question: str, chat_history: list[dict] | None = None) -> str:
+        """Только retrieval без LLM: возвращает пронумерованный контекст или ''."""
         if self._index is None:
-            raise RuntimeError("RAGService не инициализирован — вызови build() сначала")
+            return ""
+        query = self._condense(question, chat_history) if chat_history else question
+        nodes = self._retrieve_nodes(query)
+        if _top_score(nodes) < self._threshold:
+            return ""
+        return _format_context(nodes)
 
-        retrieval_question = question
-        if chat_history:
-            retrieval_question = self._condense(question, chat_history)
-
-        retriever = self._index.as_retriever(similarity_top_k=self._top_k)
-        nodes = retriever.retrieve(retrieval_question)
-
-        if self._use_reranker and nodes:
-            try:
-                from app.services.reranker import rerank
-                texts = [n.text for n in nodes]
-                sources_list = [n.metadata.get("source", "") for n in nodes]
-                ranked = rerank(retrieval_question, texts, sources_list, top_n=5)
-                idx_map = {n.text: n for n in nodes}
-                reranked_nodes = []
-                for r in ranked:
-                    node = idx_map.get(r.text)
-                    if node:
-                        node.score = r.relevance_score
-                        reranked_nodes.append(node)
-                nodes = reranked_nodes if reranked_nodes else nodes[:5]
-            except Exception:
-                nodes = nodes[:5]
-        else:
-            nodes = nodes[:5]
-
-        top_score = nodes[0].score if nodes else 0.0
+    def answer(self, question: str, chat_history: list[dict] | None = None) -> dict:
+        query = self._condense(question, chat_history) if chat_history else question
+        nodes = self._retrieve_nodes(query)
+        top_score = _top_score(nodes)
         confident = top_score >= self._threshold
 
-        if not confident:
-            return {
-                "answer": "По базе не нашёл, могу эскалировать.",
-                "top_score": round(top_score, 4),
-                "confident": False,
-                "sources": _format_sources(nodes),
-            }
-
-        prompt = _build_prompt(question, nodes, chat_history)
-        answer_text = str(Settings.llm.complete(prompt))
+        if confident:
+            answer_text = str(Settings.llm.complete(_build_prompt(question, nodes, chat_history)))
+        else:
+            answer_text = NOT_FOUND
 
         return {
             "answer": answer_text,
             "top_score": round(top_score, 4),
-            "confident": True,
+            "confident": confident,
             "sources": _format_sources(nodes),
         }
 
-
     def evaluate_inputs(self, question: str) -> dict:
         """Для eval-пайплайна: возвращает answer + полный список retrieved_contexts."""
-        if self._index is None:
-            raise RuntimeError("RAGService не инициализирован — вызови build() сначала")
-
-        retriever = self._index.as_retriever(similarity_top_k=self._top_k)
-        nodes = retriever.retrieve(question)
-
-        if self._use_reranker and nodes:
-            try:
-                from app.services.reranker import rerank
-                texts = [n.text for n in nodes]
-                sources_list = [n.metadata.get("source", "") for n in nodes]
-                ranked = rerank(question, texts, sources_list, top_n=5)
-                idx_map = {n.text: n for n in nodes}
-                reranked_nodes = []
-                for r in ranked:
-                    node = idx_map.get(r.text)
-                    if node:
-                        node.score = r.relevance_score
-                        reranked_nodes.append(node)
-                nodes = reranked_nodes if reranked_nodes else nodes[:5]
-            except Exception:
-                nodes = nodes[:5]
+        nodes = self._retrieve_nodes(question)
+        if _top_score(nodes) < self._threshold:
+            answer_text = NOT_FOUND
         else:
-            nodes = nodes[:5]
-
-        retrieved_contexts = [n.text for n in nodes]  # полный текст, не обрезанный
-
-        top_score = nodes[0].score if nodes else 0.0
-        if top_score < self._threshold:
-            return {
-                "answer": "По базе не нашёл, могу эскалировать.",
-                "retrieved_contexts": retrieved_contexts,
-            }
-
-        prompt = _build_prompt(question, nodes)
-        answer_text = str(Settings.llm.complete(prompt))
+            answer_text = str(Settings.llm.complete(_build_prompt(question, nodes)))
         return {
             "answer": answer_text,
-            "retrieved_contexts": retrieved_contexts,
+            "retrieved_contexts": [n.text for n in nodes],
         }
 
 
@@ -263,10 +206,11 @@ if __name__ == "__main__":
     svc = get_rag_service()
     svc.build()
     # Тест мультитёрн
-    r1 = svc.answer("Какова неустойка за просрочку оплаты по договору подряда?")
+    q1 = "Какой штраф за просрочку ввода объекта в эксплуатацию по Ростовскому соглашению?"
+    r1 = svc.answer(q1)
     print("Вопрос 1:", json.dumps(r1["answer"], ensure_ascii=False))
-    r2 = svc.answer("а для них?", chat_history=[
-        {"role": "user", "content": "Какова неустойка за просрочку оплаты по договору подряда?"},
+    r2 = svc.answer("а по Вологодскому?", chat_history=[
+        {"role": "user", "content": q1},
         {"role": "assistant", "content": r1["answer"]},
     ])
     print("Вопрос 2 (follow-up):", json.dumps(r2["answer"], ensure_ascii=False))

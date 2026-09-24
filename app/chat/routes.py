@@ -1,5 +1,8 @@
+import asyncio
 import json
 from uuid import UUID
+
+import structlog
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
@@ -12,6 +15,7 @@ from app.chat.service import ChatService
 from app.deps.providers import get_openai
 
 router = APIRouter(prefix="/chats", tags=["chat"])
+log = structlog.get_logger()
 
 
 class CreateChatIn(BaseModel):
@@ -65,15 +69,17 @@ async def send_message(
             "part": media_part,
         }
 
-    rag_context: str | None = None
+    rag_context = ""
     rag = getattr(request.app.state, "rag", None)
     if rag is not None:
         try:
             history = await service._repo.list_messages(chat_id, limit=6)
             chat_history = [{"role": m.role, "content": m.content} for m in history] or None
-            rag_context = rag.retrieve_context(content, chat_history=chat_history)
+            # retrieve_context синхронный (эмбеддинг + Qdrant + LLM) — уводим в поток,
+            # чтобы не блокировать остальные запросы
+            rag_context = await asyncio.to_thread(rag.retrieve_context, content, chat_history)
         except Exception:
-            pass
+            log.exception("rag_retrieve_failed", chat_id=str(chat_id))
 
     async def generator():
         async for event in service.send_message(

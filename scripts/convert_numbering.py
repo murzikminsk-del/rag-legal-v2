@@ -9,6 +9,7 @@
 """
 from pathlib import Path
 
+import sys
 import win32com.client
 
 LAYOUT_TABLE_FILES = {"КС Вологда.docx"}
@@ -17,7 +18,8 @@ WD_SEPARATE_BY_PARAGRAPHS = 0
 word = win32com.client.Dispatch("Word.Application")
 word.Visible = False
 try:
-    for f in sorted(Path("data").rglob("*.docx")):
+    root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data")
+    for f in sorted(root.rglob("*.docx")):
         if f.name.startswith("~$"):  # временные файлы Word
             continue
         doc = word.Documents.Open(str(f.resolve()))

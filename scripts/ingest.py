@@ -178,7 +178,7 @@ def main(data_dir: str) -> None:
         ],
         vector_store=vector_store,
         docstore=docstore,
-        docstore_strategy=DocstoreStrategy.UPSERTS,
+        docstore_strategy=DocstoreStrategy.UPSERTS_AND_DELETE,
     )
 
     log.info("Загружаю документы из %s ...", data_dir)
