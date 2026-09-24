@@ -42,17 +42,17 @@ class Settings(BaseSettings):
     moderation_keywords_path: Path = Path("moderation_keywords.yaml")
 
     embedding_model: str = "text-embedding-3-small"
-    
-    
+    embedding_cache_dir: Path = Path(".cache/embeddings")
+    embedding_batch_size: int = 100
     
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
-    
+    qdrant_collection: str = "documents"
     embedding_dim: int = 1536
     
     rag_collection: str = "rag_legal_v2"
-    
-    
+    rag_baremetal_collection: str = "rag_block_03_baremetal"
+    rag_corpus_dir: Path = Path("data/rag-block-03")
     chunk_size: int = 512
     chunk_overlap: int = 64
     similarity_top_k: int = 10
