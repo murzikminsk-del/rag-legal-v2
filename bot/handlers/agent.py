@@ -1,4 +1,4 @@
-"""Хэндлеры агентных команд: /research и /agent."""
+"""Хэндлеры агентных команд: /agent."""
 
 from aiogram import F, Router
 from aiogram.filters import Command
@@ -9,26 +9,6 @@ from bot.services.backend_client import BackendClient, BackendError
 from bot.states import AgentFlow
 
 router = Router()
-
-
-@router.message(Command("research"))
-async def cmd_research(message: Message, backend: BackendClient) -> None:
-    """Мультиагент: researcher (RAG) + writer (цитирование)."""
-    question = message.text.removeprefix("/research").strip()
-    if not question:
-        await message.answer("Использование: /research <вопрос>")
-        return
-    placeholder = await message.answer("⏳ Исследую...")
-    try:
-        answer = await backend.research(
-            question=question,
-            thread_id=f"tg-{message.chat.id}",
-        )
-        await placeholder.edit_text(answer)
-    except BackendError as e:
-        await placeholder.edit_text(str(e))
-    except Exception:
-        await placeholder.edit_text("Произошла ошибка. Попробуйте позже.")
 
 
 @router.message(Command("agent"))

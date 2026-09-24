@@ -80,16 +80,6 @@ class BackendClient:
     async def aclose(self) -> None:
         await self._http.aclose()
         
-    async def research(self, question: str, thread_id: str = "research-default") -> str:
-        """Мультиагент: researcher + writer, возвращает ответ с цитированием."""
-        r = await self._http.post(
-            "/agent/research",
-            json={"question": question, "thread_id": thread_id},
-            timeout=httpx.Timeout(connect=3.0, read=120.0, write=10.0, pool=5.0),
-        )
-        r.raise_for_status()
-        return r.json()["answer"]
-
     async def agent_chat(self, message: str, thread_id: str) -> dict:
         """Персистентный агент: возвращает {status, answer, interrupt}."""
         r = await self._http.post(

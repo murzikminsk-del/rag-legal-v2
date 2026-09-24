@@ -46,7 +46,6 @@ async def main() -> None:
         BotCommand(command="clear", description="Очистить историю"),
         BotCommand(command="cancel", description="Отменить сценарий"),
         BotCommand(command="help", description="Справка"),
-        BotCommand(command="research", description="Анализ с источниками (researcher + writer)"),
         BotCommand(command="agent", description="Персональный агент с подтверждением"),
     ])
 
