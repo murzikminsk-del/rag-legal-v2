@@ -1,3 +1,5 @@
+> **Исторический документ.** Состояние на блок 5.5: учебный корпус из 30 файлов Markdown и нарезка `SentenceSplitter`. Сейчас корпус и нарезка другие — см. [architecture.md](architecture.md) и [search-quality.md](search-quality.md).
+
 # RAG — документация блока 5.5
 
 ## Архитектура
